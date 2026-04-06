@@ -1,7 +1,7 @@
 
   # Redesign Loan Company Website
 
-  This is a code bundle for Redesign Loan Company Website. 
+  This is a code bundle for Redesign Loan Company Website.
 
   ## Running the code
 
