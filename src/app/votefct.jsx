@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 const transactions = [
   { id: 1, date: "01/12/2025", description: "YIAGA AFRICA INITIATIVE PROJECT 2 – 70% Grant (First Tranche)", beneficiary: "YIAGA AFRICA INITIATIVE", category: "Grant Inflow", amount: 2800000, type: "deposit" },
   { id: 2, date: "26/03/2026", description: "Last Tranche – Project Funding (PP_NIP_1089145389)", beneficiary: "TUD / YIAGA AFRICA", category: "Grant Inflow", amount: 1200000, type: "deposit" },
-  { id: 3, date: "31/12/2025", description: "UBA Interest", beneficiary: "BELLO-IBE", category: "Interest", amount: 19259.18, type: "deposit" },
+  { id: 3, date: "31/12/2025", description: "UBA Interest", beneficiary: "BELLO-IBE", category: "Grant Inflow", amount: 19259.18, type: "deposit" },
   { id: 4, date: "31/12/2025", description: "Transportation to the venue", beneficiary: "PRAISE CHIDUMEBI IBE", category: "Transportation", amount: 5010.75, type: "withdrawal" },
   { id: 5, date: "31/12/2025", description: "Data Bundle for Social Media", beneficiary: "MFREKEMFON BASSEY BASS", category: "Digital/Comms", amount: 10026.88, type: "withdrawal" },
   { id: 6, date: "02/01/2026", description: "Payment of December Stipend", beneficiary: "PRAISE CHIDUMEBI IBE", category: "Team Stipend", amount: 250053.75, type: "withdrawal" },
