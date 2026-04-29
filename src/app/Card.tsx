@@ -280,7 +280,7 @@ export default function CardGenerator() {
                 <div
                   className="absolute flex flex-col justify-end"
                   style={{
-                    bottom: '120px',
+                    bottom: '195px',
                     right: '80px',
                     left: '90px',
                     fontFamily: "'Satoshi', sans-serif",
