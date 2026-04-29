@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OnyeAkụkọ Card Generator</title>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #E59C6A;
+    --accent-dim: rgba(229,156,106,0.12);
+    --dark: #0C0C0C;
+    --surface: #161616;
+    --surface2: #1E1E1E;
+    --border: #2A2A2A;
+    --text: #F2EDE8;
+    --muted: #666;
+    --font: 'Satoshi', system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .topbar {
+    width: 100%;
+    max-width: 980px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .brand { font-weight: 900; font-size: 22px; letter-spacing: -0.02em; }
+  .brand span { color: var(--accent); }
+
+  .pill {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid rgba(229,156,106,0.25);
+    border-radius: 20px;
+    padding: 5px 13px;
+  }
+
+  .workspace {
+    width: 100%;
+    max-width: 980px;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  @media (max-width: 780px) {
+    .workspace { grid-template-columns: 1fr; }
+  }
+
+  .controls { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+
+  .panel-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  input[type="text"], textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    padding: 10px 12px;
+    width: 100%;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.55; }
+
+  .hint { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .hint strong { color: var(--accent); }
+
+  .upload-zone {
+    border: 1.5px dashed var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .upload-zone:hover { border-color: var(--accent); background: var(--accent-dim); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 18px; color: var(--muted); margin-bottom: 4px; }
+  .upload-text { font-size: 13px; color: var(--muted); }
+  .upload-text strong { color: var(--accent); }
+  #uploadedName { font-size: 11px; color: var(--accent); margin-top: 4px; min-height: 14px; }
+
+  .chip-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 7px 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: #1A0D00; }
+
+  .slider-row { display: flex; align-items: center; gap: 10px; }
+  input[type="range"] { flex: 1; accent-color: var(--accent); }
+  .slider-val { font-size: 12px; font-weight: 700; color: var(--accent); min-width: 34px; text-align: right; }
+
+  .preview-side {
+    position: sticky;
+    top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+
+  .format-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+
+  .fmt-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 8px 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .fmt-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  .canvas-shell { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #000; width: 100%; }
+  canvas#preview { width: 100%; height: auto; display: block; }
+
+  .btn-dl {
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    color: #1A0D00;
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 900;
+    padding: 13px;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-dl:hover { opacity: 0.85; }
+  .btn-dl:active { transform: scale(0.98); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">onyeakuko<span>.</span></div>
+  <div class="pill">Card Generator</div>
+</div>
+
+<div class="workspace">
+
+  <div class="controls">
+
+    <div class="panel">
+      <div class="panel-title">Photo</div>
+      <div class="upload-zone">
+        <input type="file" id="imgInput" accept="image/*">
+        <div class="upload-icon">↑</div>
+        <div class="upload-text"><strong>Upload photo</strong> or drag & drop</div>
+        <div id="uploadedName"></div>
+      </div>
+      <div class="field">
+        <label>Overlay darkness</label>
+        <div class="slider-row">
+          <input type="range" id="overlayRange" min="0" max="92" value="50" step="1">
+          <span class="slider-val" id="overlayVal">50%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Headline</div>
+      <div class="field">
+        <label>Prefix</label>
+        <div class="chip-grid" id="prefixGroup">
+          <button class="chip active" data-val="JUST IN:">Just In</button>
+          <button class="chip" data-val="BREAKING:">Breaking</button>
+          <button class="chip" data-val="EXCLUSIVE:">Exclusive</button>
+          <button class="chip" data-val="DEVELOPING:">Developing</button>
+          <button class="chip" data-val="OPINION:">Opinion</button>
+          <button class="chip" data-val="">None</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Headline text</label>
+        <textarea id="headlineInput" placeholder="Reps approve Tinubu's $516m loan request for superhighway"></textarea>
+      </div>
+      <div class="field">
+        <label>Highlight words <span style="color:var(--accent);">(comma separated)</span></label>
+        <input type="text" id="highlightInput" placeholder="Reps, $516m">
+        <div class="hint">Words appear in <strong>#E59C6A</strong> — use for names, numbers, key terms</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Category</div>
+      <div class="chip-grid" id="catGroup">
+        <button class="chip active" data-val="Nigeria">Nigeria</button>
+        <button class="chip" data-val="Africa">Africa</button>
+        <button class="chip" data-val="Politics">Politics</button>
+        <button class="chip" data-val="Business">Business</button>
+        <button class="chip" data-val="Technology">Technology</button>
+        <button class="chip" data-val="Crime">Crime</button>
+        <button class="chip" data-val="Sports">Sports</button>
+        <button class="chip" data-val="World">World</button>
+        <button class="chip" data-val="Culture">Culture</button>
+        <button class="chip" data-val="Health">Health</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="preview-side">
+    <div class="section-label">Format</div>
+    <div class="format-row">
+      <button class="fmt-btn" data-fmt="landscape">16:9 Twitter/X</button>
+      <button class="fmt-btn active" data-fmt="square">1:1 Instagram</button>
+      <button class="fmt-btn" data-fmt="story">9:16 Story</button>
+    </div>
+    <div class="canvas-shell">
+      <canvas id="preview"></canvas>
+    </div>
+    <button class="btn-dl" id="downloadBtn">↓ Download Card</button>
+  </div>
+
+</div>
+
+<script>
+const canvas = document.getElementById('preview');
+const ctx = canvas.getContext('2d');
+const ACCENT = '#E59C6A';
+
+const state = {
+  img: null,
+  headline: "Reps approve Tinubu's $516m loan request",
+  prefix: 'JUST IN:',
+  highlights: ['Reps', '$516m'],
+  category: 'Nigeria',
+  overlay: 0.50,
+  fmt: 'square'
+};
+
+const FORMATS = {
+  landscape: { w: 1200, h: 675 },
+  square:    { w: 1080, h: 1080 },
+  story:     { w: 1080, h: 1920 }
+};
+
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function wrapWords(ctx, words, maxWidth) {
+  const lines = [];
+  let line = [];
+  for (const wd of words) {
+    const test = [...line, wd];
+    if (ctx.measureText(test.map(w => w.text).join(' ')).width > maxWidth && line.length) {
+      lines.push(line);
+      line = [wd];
+    } else {
+      line = test;
+    }
+  }
+  if (line.length) lines.push(line);
+  return lines;
+}
+
+function isHighlight(word) {
+  const clean = word.replace(/['']/g, "'").replace(/[^\w$%.'-]/g, '').toLowerCase();
+  return state.highlights.some(h => {
+    const hc = h.trim().replace(/['']/g, "'").toLowerCase();
+    return hc && (clean === hc || clean.startsWith(hc));
+  });
+}
+
+function render() {
+  const { w, h } = FORMATS[state.fmt];
+  canvas.width = w;
+  canvas.height = h;
+
+  const PAD  = Math.round(w * 0.055);
+  const BORD = Math.round(w * 0.013);
+  const R    = Math.round(w * 0.03);
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, w, h);
+
+  const inset = BORD * 3;
+
+  if (state.img) {
+    ctx.save();
+    roundRectPath(ctx, inset, inset, w - inset * 2, h - inset * 2, R);
+    ctx.clip();
+    const sc = Math.max((w - inset * 2) / state.img.width, (h - inset * 2) / state.img.height);
+    const iw = state.img.width * sc, ih = state.img.height * sc;
+    ctx.drawImage(state.img, inset + ((w - inset * 2) - iw) / 2, inset + ((h - inset * 2) - ih) / 2, iw, ih);
+    ctx.restore();
+
+    ctx.save();
+    roundRectPath(ctx, inset, inset, w - inset * 2, h - inset * 2, R);
+    ctx.clip();
+    const g = ctx.createLinearGradient(0, h * 0.2, 0, h);
+    const ov = state.overlay;
+    g.addColorStop(0,   `rgba(0,0,0,${Math.max(0, ov - 0.3).toFixed(2)})`);
+    g.addColorStop(0.55,`rgba(0,0,0,${(ov * 0.8).toFixed(2)})`);
+    g.addColorStop(1,   `rgba(0,0,0,${Math.min(0.96, ov + 0.3).toFixed(2)})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+  }
+
+  // Border
+  ctx.save();
+  roundRectPath(ctx, inset, inset, w - inset * 2, h - inset * 2, R);
+  ctx.strokeStyle = ACCENT;
+  ctx.lineWidth = BORD;
+  ctx.stroke();
+  ctx.restore();
+
+  // Logo
+  const logoSize = Math.round(w * 0.038);
+  const lx = PAD, ly = PAD;
+  ctx.font = `900 ${logoSize}px Satoshi, sans-serif`;
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText('onyeakuko', lx, ly);
+  const mainW = ctx.measureText('onyeakuko').width;
+  ctx.fillStyle = ACCENT;
+  ctx.fillText('.', lx + mainW, ly);
+
+  // Category
+  const catSize = Math.round(w * 0.029);
+  ctx.font = `700 ${catSize}px Satoshi, sans-serif`;
+  ctx.fillStyle = ACCENT;
+  ctx.textBaseline = 'top';
+  const catW = ctx.measureText(state.category).width;
+  ctx.fillText(state.category, w - PAD - catW, ly + (logoSize - catSize) * 0.5);
+
+  // Headline
+  const isStory = state.fmt === 'story';
+  const isLand  = state.fmt === 'landscape';
+  const headSize = isStory ? Math.round(w * 0.088) : isLand ? Math.round(w * 0.068) : Math.round(w * 0.082);
+  const lineH  = headSize * 1.17;
+  const maxW   = w - PAD * 2;
+  const botPad = isStory ? h * 0.065 : h * 0.088;
+
+  ctx.font = `900 ${headSize}px Satoshi, sans-serif`;
+  ctx.textBaseline = 'alphabetic';
+
+  const wordObjs = state.headline.split(/\s+/).filter(Boolean).map(t => ({ text: t, hi: isHighlight(t) }));
+  const lines = wrapWords(ctx, wordObjs, maxW);
+
+  const prefSize = Math.round(headSize * 0.7);
+  const prefH = state.prefix ? prefSize * 1.6 : 0;
+  const blockH = lines.length * lineH + prefH;
+  let ty = h - botPad - blockH;
+
+  if (state.prefix) {
+    ctx.font = `700 ${prefSize}px Satoshi, sans-serif`;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(state.prefix, PAD, ty + prefSize);
+    ty += prefH;
+  }
+
+  ctx.font = `900 ${headSize}px Satoshi, sans-serif`;
+  lines.forEach((line, li) => {
+    const lineStr = line.map(w => w.text).join(' ');
+    const lw = ctx.measureText(lineStr).width;
+    let cx = PAD + (maxW - lw) / 2;
+    const baseY = ty + (li + 1) * lineH;
+
+    line.forEach((wd, wi) => {
+      ctx.fillStyle = wd.hi ? ACCENT : '#FFFFFF';
+      ctx.fillText(wd.text, cx, baseY);
+      cx += ctx.measureText(wd.text).width;
+      if (wi < line.length - 1) {
+        ctx.fillStyle = '#FFFFFF';
+        cx += ctx.measureText(' ').width;
+      }
+    });
+  });
+}
+
+// ——— Event listeners ———
+
+document.getElementById('imgInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('uploadedName').textContent = file.name;
+  const img = new Image();
+  img.onload = () => { state.img = img; render(); };
+  img.src = URL.createObjectURL(file);
+});
+
+document.getElementById('headlineInput').addEventListener('input', e => {
+  state.headline = e.target.value; render();
+});
+
+document.getElementById('highlightInput').addEventListener('input', e => {
+  state.highlights = e.target.value.split(',').map(s => s.trim()).filter(Boolean); render();
+});
+
+document.getElementById('overlayRange').addEventListener('input', e => {
+  state.overlay = e.target.value / 100;
+  document.getElementById('overlayVal').textContent = e.target.value + '%';
+  render();
+});
+
+['prefixGroup','catGroup'].forEach(id => {
+  const key = id === 'prefixGroup' ? 'prefix' : 'category';
+  document.getElementById(id).addEventListener('click', e => {
+    const btn = e.target.closest('.chip');
+    if (!btn) return;
+    document.querySelectorAll(`#${id} .chip`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state[key] = btn.dataset.val;
+    render();
+  });
+});
+
+document.querySelectorAll('.fmt-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.fmt = btn.dataset.fmt;
+    render();
+  });
+});
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.download = `onyeakuko-${state.category.toLowerCase()}-${Date.now()}.png`;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+});
+
+// Load Satoshi from Fontshare then render
+const f1 = new FontFace('Satoshi', 'url(https://api.fontshare.com/v2/fonts/satoshi/fonts/Satoshi-Black.woff2)', { weight: '900' });
+const f2 = new FontFace('Satoshi', 'url(https://api.fontshare.com/v2/fonts/satoshi/fonts/Satoshi-Bold.woff2)',  { weight: '700' });
+Promise.allSettled([f1.load(), f2.load()]).then(res => {
+  res.forEach(r => { if (r.status === 'fulfilled') document.fonts.add(r.value); });
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
