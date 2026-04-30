@@ -38,26 +38,36 @@ export default function CardGenerator() {
     }
   };
 
-  const handleDownload = useCallback(() => {
+  const handleDownload = useCallback(async () => {
     if (cardRef.current === null) {
       return;
     }
 
-    htmlToImage.toPng(cardRef.current, {
-      cacheBust: true,
-      width: 1080,
-      height: 1080,
-      pixelRatio: 1
-    })
-      .then((dataUrl) => {
-        const link = document.createElement('a');
-        link.download = `onyeakuko-${category.toLowerCase()}-${Date.now()}.png`;
-        link.href = dataUrl;
-        link.click();
-      })
-      .catch((err) => {
-        console.error('Oops, something went wrong!', err);
+    try {
+      // iOS Safari workaround: run html-to-image twice. 
+      // The first pass forces the browser to load and render all assets.
+      await htmlToImage.toPng(cardRef.current, {
+        cacheBust: true,
+        width: 1080,
+        height: 1080,
+        pixelRatio: 1
       });
+
+      // The second pass successfully captures the fully rendered DOM
+      const dataUrl = await htmlToImage.toPng(cardRef.current, {
+        cacheBust: true,
+        width: 1080,
+        height: 1080,
+        pixelRatio: 1
+      });
+
+      const link = document.createElement('a');
+      link.download = `onyeakuko-${category.toLowerCase()}-${Date.now()}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Oops, something went wrong!', err);
+    }
   }, [category]);
 
   const highlightWords = highlights.split(',').map(s => s.trim()).filter(Boolean);
@@ -87,8 +97,35 @@ export default function CardGenerator() {
   return (
     <div className="min-h-screen bg-[#0C0C0C] text-[#F2EDE8] flex flex-col items-center py-8 px-4" style={{ fontFamily: "'Satoshi', system-ui, sans-serif" }}>
       <style>{`
-        @import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@900&display=swap');
+        @font-face {
+          font-family: 'Satoshi';
+          src: url('/fonts/satoshi-400.woff2') format('woff2');
+          font-weight: 400;
+          font-display: swap;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: 'Satoshi';
+          src: url('/fonts/satoshi-500.woff2') format('woff2');
+          font-weight: 500;
+          font-display: swap;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: 'Satoshi';
+          src: url('/fonts/satoshi-700.woff2') format('woff2');
+          font-weight: 700;
+          font-display: swap;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: 'Satoshi';
+          src: url('/fonts/satoshi-900.woff2') format('woff2');
+          font-weight: 900;
+          font-display: swap;
+          font-style: normal;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;900&display=swap');
       `}</style>
 
       <div className="w-full max-w-5xl flex items-center justify-between mb-10 pb-5 border-b border-[#2A2A2A]">
@@ -208,10 +245,13 @@ export default function CardGenerator() {
                 }}
               >
                 {image && (
-                  <img
-                    src={image}
-                    alt="Background"
-                    className="absolute inset-0 w-full h-full object-cover"
+                  <div
+                    className="absolute inset-0 w-full h-full"
+                    style={{
+                      backgroundImage: `url(${image})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
                   />
                 )}
 
@@ -242,6 +282,14 @@ export default function CardGenerator() {
                   className="absolute bottom-0 left-0 right-0 h-[60%]"
                   style={{
                     background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%)',
+                    pointerEvents: 'none'
+                  }}
+                />
+                {/* Additional top gradient for text readability, placed after border so it sits on top */}
+                <div
+                  className="top-0 left-0 right-0 h-[40%]"
+                  style={{
+                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)',
                     pointerEvents: 'none'
                   }}
                 />
@@ -283,7 +331,7 @@ export default function CardGenerator() {
                     bottom: '195px',
                     right: '80px',
                     left: '90px',
-                    fontFamily: "'Satoshi', sans-serif",
+                    fontFamily: "'Outfit', sans-serif",
                     textAlign: 'right'
                   }}
                 >
@@ -301,6 +349,7 @@ export default function CardGenerator() {
                   )}
                   <div
                     style={{
+                      fontFamily: "'Satoshi', sans-serif",
                       fontSize: '64px',
                       fontWeight: 900,
                       lineHeight: '1.2',
