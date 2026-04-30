@@ -125,7 +125,20 @@ export default function CardGenerator() {
           font-display: swap;
           font-style: normal;
         }
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;900&display=swap');
+        @font-face {
+          font-family: 'Outfit';
+          src: url('/fonts/outfit-500.ttf') format('truetype');
+          font-weight: 500;
+          font-display: swap;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: 'Outfit';
+          src: url('/fonts/outfit-900.ttf') format('truetype');
+          font-weight: 900;
+          font-display: swap;
+          font-style: normal;
+        }
       `}</style>
 
       <div className="w-full max-w-5xl flex items-center justify-between mb-10 pb-5 border-b border-[#2A2A2A]">
@@ -265,6 +278,16 @@ export default function CardGenerator() {
                   }}
                 />
 
+
+                {/* Additional top gradient for text readability, placed before border so it sits underneath */}
+                <div
+                  className="absolute top-0 left-0 right-0 h-[40%]"
+                  style={{
+                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)',
+                    pointerEvents: 'none'
+                  }}
+                />
+
                 <div
                   className="absolute"
                   style={{
@@ -285,14 +308,6 @@ export default function CardGenerator() {
                     pointerEvents: 'none'
                   }}
                 />
-                {/* Additional top gradient for text readability, placed after border so it sits on top */}
-                <div
-                  className="top-0 left-0 right-0 h-[40%]"
-                  style={{
-                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)',
-                    pointerEvents: 'none'
-                  }}
-                />
 
                 <div
                   className="absolute"
@@ -304,7 +319,8 @@ export default function CardGenerator() {
                     fontWeight: 900,
                     letterSpacing: '-0.02em',
                     color: '#FFFFFF',
-                    lineHeight: 1
+                    lineHeight: 1,
+                    zIndex: 20
                   }}
                 >
                   onyeakuko<span style={{ color: '#E59C6A' }}>.</span>
@@ -319,7 +335,8 @@ export default function CardGenerator() {
                     fontSize: '30px',
                     fontWeight: 500,
                     color: '#E59C6A',
-                    lineHeight: 1
+                    lineHeight: 1,
+                    zIndex: 20
                   }}
                 >
                   {category}
