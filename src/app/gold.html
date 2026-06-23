@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Foods — Stockfish, Garri & Palm Oil | Abuja</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+        :root {
+            --ink: #1C1410;
+            --gold: #C89A3C;
+            --gold-light: #E0BC6B;
+            --rust: #A8431F;
+            --cream: #EFE6D8;
+            --green: #4B5320;
+            --paper: #F7F2E8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        h1,
+        h2,
+        h3,
+        .display {
+            font-family: 'Anton', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 0.95;
+        }
+
+        .mono {
+            font-family: 'Space Mono', monospace;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        img,
+        svg {
+            display: block;
+        }
+
+        .wrap {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .visually-hidden {
+            position: absolute;
+            left: -9999px;
+        }
+
+        /* ===== NAV ===== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: var(--ink);
+            border-bottom: 3px solid var(--gold);
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 24px;
+            max-width: 1140px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            color: var(--cream);
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo svg {
+            width: 30px;
+            height: 30px;
+            flex-shrink: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+        }
+
+        .nav-links a {
+            color: var(--cream);
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            position: relative;
+            padding: 4px 0;
+        }
+
+        .nav-links a::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 2px;
+            width: 0;
+            background: var(--gold);
+            transition: width .25s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-cta {
+            background: var(--gold);
+            color: var(--ink);
+            padding: 13px 28px;
+            border-radius: 3px;
+            font-weight: 800;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--cream);
+            font-size: 26px;
+            cursor: pointer;
+        }
+
+        @media (max-width:760px) {
+            .nav-links {
+                position: absolute;
+                top: 62px;
+                left: 0;
+                right: 0;
+                background: var(--ink);
+                flex-direction: column;
+                padding: 18px 24px;
+                gap: 18px;
+                border-bottom: 3px solid var(--gold);
+                transform: translateY(-130%);
+                transition: transform .3s ease;
+            }
+
+            .nav-links.open {
+                transform: translateY(0);
+            }
+
+            .menu-btn {
+                display: block;
+            }
+
+            .nav-cta {
+                display: none;
+            }
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            position: relative;
+            background: var(--ink);
+            color: var(--cream);
+            padding: 90px 24px 70px;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(135deg, rgba(200, 154, 60, 0.06) 0 2px, transparent 2px 26px);
+            pointer-events: none;
+        }
+
+        .hero-inner {
+            max-width: 1140px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        @media (max-width:880px) {
+            .hero-inner {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .eyebrow {
+            color: var(--gold);
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .eyebrow::before {
+            content: "";
+            width: 24px;
+            height: 2px;
+            background: var(--gold);
+        }
+
+        .hero h1 {
+            font-size: clamp(48px, 8vw, 84px);
+            color: var(--cream);
+            margin-bottom: 8px;
+        }
+
+        .hero h1 span {
+            color: var(--gold);
+        }
+
+        .hero-sub {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #D8CDBD;
+            max-width: 480px;
+            margin: 18px 0 30px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 26px;
+            border-radius: 3px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-size: 14px;
+            transition: transform .2s ease, box-shadow .2s ease;
+            border: 2px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--gold);
+            color: var(--ink);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 var(--rust);
+        }
+
+        .btn-outline {
+            border-color: var(--cream);
+            color: var(--cream);
+        }
+
+        .btn-outline:hover {
+            background: var(--cream);
+            color: var(--ink);
+        }
+
+        .stamp {
+            border: 3px solid var(--gold);
+            border-radius: 50%;
+            width: 170px;
+            height: 170px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            transform: rotate(-8deg);
+            color: var(--gold);
+            position: relative;
+        }
+
+        .stamp::before {
+            content: "";
+            position: absolute;
+            inset: 8px;
+            border: 1px dashed var(--gold);
+            border-radius: 50%;
+        }
+
+        .stamp .big {
+            font-family: 'Anton';
+            font-size: 30px;
+            line-height: 1;
+        }
+
+        .stamp .small {
+            font-family: 'Space Mono';
+            font-size: 11px;
+            letter-spacing: .1em;
+            margin-top: 6px;
+        }
+
+        /* ===== MARQUEE ===== */
+        .marquee {
+            background: var(--gold);
+            color: var(--ink);
+            overflow: hidden;
+            white-space: nowrap;
+            border-bottom: 3px solid var(--ink);
+            padding: 10px 0;
+        }
+
+        .marquee-track {
+            display: inline-block;
+            animation: scroll 22s linear infinite;
+        }
+
+        .marquee span {
+            font-family: 'Space Mono';
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-right: 40px;
+        }
+
+        @keyframes scroll {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-50%);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .marquee-track {
+                animation: none;
+            }
+        }
+
+        /* ===== SECTION GENERIC ===== */
+        section {
+            padding: 80px 24px;
+        }
+
+        .section-head {
+            margin-bottom: 46px;
+            max-width: 640px;
+        }
+
+        .section-head .eyebrow {
+            color: var(--rust);
+        }
+
+        .section-head h2 {
+            font-size: clamp(34px, 5vw, 52px);
+        }
+
+        .section-head p {
+            color: #5b5048;
+            font-size: 16px;
+            margin-top: 14px;
+            line-height: 1.6;
+        }
+
+        /* ===== PRODUCTS ===== */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 22px;
+        }
+
+        @media (max-width:880px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .product-card {
+            background: var(--ink);
+            color: var(--cream);
+            border-radius: 6px;
+            padding: 30px;
+            position: relative;
+            border: 1px solid #322820;
+            transition: transform .25s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-6px);
+        }
+
+        .product-card .swatch {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .swatch.stockfish {
+            background: #8A7457;
+        }
+
+        .swatch.garri {
+            background: var(--cream);
+        }
+
+        .swatch.palmoil {
+            background: var(--rust);
+        }
+
+        .product-card h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .product-card p {
+            color: #C9BEAD;
+            font-size: 14.5px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .tag-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            font-family: 'Space Mono';
+            font-size: 11px;
+            letter-spacing: .05em;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+
+        /* ===== PRICE BOARD ===== */
+        .board-section {
+            background: var(--ink);
+            color: var(--cream);
+        }
+
+        .toggle-wrap {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .toggle {
+            display: flex;
+            background: #2A2118;
+            border-radius: 30px;
+            padding: 5px;
+            border: 1px solid #423626;
+        }
+
+        .toggle button {
+            font-family: 'Space Mono';
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            padding: 10px 26px;
+            border-radius: 24px;
+            border: none;
+            background: transparent;
+            color: #9C8F7C;
+            cursor: pointer;
+            transition: all .25s ease;
+        }
+
+        .toggle button.active {
+            background: var(--gold);
+            color: var(--ink);
+        }
+
+        .board {
+            background: repeating-linear-gradient(0deg, #241B14 0 2px, #1f1610 2px 38px);
+            border: 3px solid var(--gold);
+            border-radius: 4px;
+            padding: 30px;
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, .5);
+        }
+
+        .board-row {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr 1fr;
+            align-items: center;
+            padding: 16px 6px;
+            border-bottom: 1px dashed #4a3d2c;
+            font-family: 'Space Mono';
+        }
+
+        .board-row:last-child {
+            border-bottom: none;
+        }
+
+        .board-row.head {
+            color: var(--gold);
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: .1em;
+            border-bottom: 2px solid var(--gold);
+            font-weight: 700;
+        }
+
+        .board-row .item {
+            font-family: 'Inter';
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--cream);
+        }
+
+        .board-row .item small {
+            display: block;
+            font-family: 'Space Mono';
+            font-weight: 400;
+            font-size: 12px;
+            color: #9C8F7C;
+            margin-top: 3px;
+        }
+
+        .board-row .price {
+            font-size: 18px;
+            color: var(--gold-light);
+            font-weight: 700;
+        }
+
+        .board-row .price.muted {
+            color: #5c5142;
+            text-decoration: line-through;
+            font-size: 14px;
+        }
+
+        @media (max-width:600px) {
+            .board-row {
+                grid-template-columns: 1.2fr 1fr;
+                font-size: 14px;
+            }
+
+            .board-row .unit-col {
+                display: none;
+            }
+        }
+
+        .board-note {
+            margin-top: 24px;
+            text-align: center;
+            font-family: 'Space Mono';
+            font-size: 12.5px;
+            color: #9C8F7C;
+        }
+
+        /* ===== WHY / TRUST STRIP ===== */
+        .trust-strip {
+            background: var(--cream);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            text-align: center;
+        }
+
+        @media (max-width:760px) {
+            .trust-strip {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .trust-item {
+            padding: 34px 18px;
+            border-right: 1px solid #DBCDAE;
+        }
+
+        .trust-item:last-child {
+            border-right: none;
+        }
+
+        .trust-item .num {
+            font-family: 'Anton';
+            font-size: 30px;
+            color: var(--rust);
+        }
+
+        .trust-item .label {
+            font-family: 'Space Mono';
+            font-size: 11.5px;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            color: #6b5f4d;
+            margin-top: 6px;
+        }
+
+        /* ===== HOW TO ORDER ===== */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 26px;
+        }
+
+        @media (max-width:880px) {
+            .steps {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .step {
+            border-left: 3px solid var(--rust);
+            padding-left: 20px;
+        }
+
+        .step .step-num {
+            font-family: 'Anton';
+            font-size: 40px;
+            color: var(--rust);
+            opacity: .5;
+        }
+
+        .step h3 {
+            font-size: 20px;
+            margin: 10px 0 8px;
+            text-transform: none;
+            font-family: 'Inter';
+            font-weight: 800;
+        }
+
+        .step p {
+            font-size: 14.5px;
+            color: #5b5048;
+            line-height: 1.6;
+        }
+
+        /* ===== PACKAGING TEASER ===== */
+        .pack-section {
+            background: linear-gradient(135deg, var(--rust), #7c2e13);
+            color: var(--cream);
+        }
+
+        .pack-inner {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        @media (max-width:880px) {
+            .pack-inner {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .pack-visual {
+            background: var(--ink);
+            border-radius: 8px;
+            padding: 34px;
+            border: 2px solid var(--gold);
+            text-align: center;
+        }
+
+        .pack-visual .bag {
+            width: 140px;
+            height: 170px;
+            margin: 0 auto 16px;
+            background: var(--cream);
+            border-radius: 4px 4px 16px 16px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, .4);
+        }
+
+        .pack-visual .bag::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 18px;
+            background: var(--gold);
+            border-radius: 4px;
+        }
+
+        .pack-visual .bag .mark {
+            font-family: 'Anton';
+            color: var(--ink);
+            font-size: 15px;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        .pack-visual .mark .dot {
+            color: var(--gold);
+        }
+
+        .pack-visual p {
+            font-family: 'Space Mono';
+            font-size: 12px;
+            color: #9C8F7C;
+            margin-top: 14px;
+        }
+
+        /* ===== CONTACT ===== */
+        .contact-section {
+            background: var(--ink);
+            color: var(--cream);
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+        }
+
+        @media (max-width:880px) {
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .contact-card {
+            background: #241B14;
+            border: 1px solid #3a2f22;
+            border-radius: 6px;
+            padding: 30px;
+        }
+
+        .contact-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .contact-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .icon-box {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+            color: var(--ink);
+        }
+
+        .contact-row h4 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #9C8F7C;
+            font-family: 'Space Mono';
+            margin-bottom: 4px;
+        }
+
+        .contact-row p {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .contact-row a {
+            color: var(--gold-light);
+        }
+
+        .hours-table {
+            width: 100%;
+            font-family: 'Space Mono';
+            font-size: 14px;
+        }
+
+        .hours-table tr {
+            border-bottom: 1px solid #3a2f22;
+        }
+
+        .hours-table td {
+            padding: 10px 0;
+            color: #C9BEAD;
+        }
+
+        .hours-table td:last-child {
+            text-align: right;
+            color: var(--gold-light);
+        }
+
+        /* footer */
+        footer {
+            background: #120D09;
+            color: #8C8071;
+            text-align: center;
+            padding: 30px 24px;
+            font-family: 'Space Mono';
+            font-size: 12.5px;
+            border-top: 3px solid var(--gold);
+        }
+
+        footer span {
+            color: var(--gold);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <nav>
+            <div class="logo">
+                <svg viewBox="0 0 400 360" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 138 222 C 138 130 262 130 262 222" fill="none" stroke="#C89A3C" stroke-width="14"
+                        stroke-linecap="round" />
+                    <ellipse cx="160" cy="218" rx="42" ry="30" fill="#EFE6D8" stroke="#1C1410" stroke-width="4" />
+                    <circle cx="146" cy="210" r="3.5" fill="#8A7457" />
+                    <circle cx="160" cy="204" r="3.5" fill="#8A7457" />
+                    <circle cx="174" cy="212" r="3.5" fill="#8A7457" />
+                    <circle cx="155" cy="222" r="3.5" fill="#8A7457" />
+                    <circle cx="170" cy="224" r="3.5" fill="#8A7457" />
+                    <path d="M 195 230 C 190 190 205 150 222 130 C 226 150 224 175 232 195 C 224 205 210 220 195 230 Z"
+                        fill="#8A7457" stroke="#1C1410" stroke-width="4" />
+                    <path
+                        d="M 245 230 L 245 170 C 245 162 252 158 252 150 L 252 138 L 266 138 L 266 150 C 266 158 273 162 273 170 L 273 230 Z"
+                        fill="#A8431F" stroke="#1C1410" stroke-width="4" />
+                    <rect x="251" y="132" width="16" height="10" rx="2" fill="#1C1410" />
+                    <path d="M 95 222 L 130 350 L 270 350 L 305 222 Z" fill="#1C1410" stroke="#C89A3C"
+                        stroke-width="5" />
+                    <path d="M 101 240 L 299 240" stroke="#C89A3C" stroke-width="3.5" opacity="0.85" />
+                    <path d="M 107 262 L 293 262" stroke="#C89A3C" stroke-width="3.5" opacity="0.85" />
+                    <path d="M 113 284 L 287 284" stroke="#C89A3C" stroke-width="3.5" opacity="0.85" />
+                    <path d="M 95 222 L 305 222" stroke="#C89A3C" stroke-width="7" stroke-linecap="round" />
+                </svg>
+                GOLD FOODS
+            </div>
+            <button class="menu-btn" id="menuBtn" aria-label="Open menu">☰</button>
+            <div class="nav-links" id="navLinks">
+                <a href="#products">Products</a>
+                <a href="#prices">Prices</a>
+                <a href="#order">How to Order</a>
+                <a href="#contact">Contact</a>
+                <a class="nav-cta" href="https://wa.me/2348036659186" target="_blank">Order Now</a>
+            </div>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-inner">
+            <div>
+                <div class="eyebrow">Lifecamp, Abuja</div>
+                <h1>GOLD<br>FOOD<span>S</span></h1>
+                <p class="hero-sub">Stockfish, garri and palm oil, sold the way you need them. One wrap for the house,
+                    or a full carton for your shop. Same quality, every time.</p>
+                <div class="hero-actions">
+                    <a class="btn btn-primary" href="https://wa.me/2348036659186" target="_blank">Order on WhatsApp
+                        →</a>
+                    <a class="btn btn-outline" href="tel:08036659186">Call 0803 665 9186</a>
+                </div>
+            </div>
+            <div>
+                <div class="stamp">
+                    <div class="big">RETAIL</div>
+                    <div class="small">& WHOLESALE</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="marquee">
+        <div class="marquee-track">
+            <span>★ STOCKFISH (OKPOROKO)</span><span>★ YELLOW & WHITE GARRI</span><span>★ PURE RED PALM
+                OIL</span><span>★ RETAIL FOR THE HOME</span><span>★ WHOLESALE FOR SHOPS</span>
+            <span>★ STOCKFISH (OKPOROKO)</span><span>★ YELLOW & WHITE GARRI</span><span>★ PURE RED PALM
+                OIL</span><span>★ RETAIL FOR THE HOME</span><span>★ WHOLESALE FOR SHOPS</span>
+        </div>
+    </div>
+
+    <section id="products">
+        <div class="wrap">
+            <div class="section-head">
+                <div class="eyebrow">What we sell</div>
+                <h2>Three staples, sourced right</h2>
+                <p>Every product is hand-checked before it leaves our store. No shortcuts, no mixed grades.</p>
+            </div>
+            <div class="products-grid">
+                <div class="product-card">
+                    <div class="swatch stockfish">🐟</div>
+                    <h3>Stockfish</h3>
+                    <p>Well-dried okporoko, sorted by size. Sold by piece for the home, or by carton for shops and
+                        caterers.</p>
+                    <div class="tag-row"><span class="tag">By piece</span><span class="tag">By carton</span></div>
+                </div>
+                <div class="product-card">
+                    <div class="swatch garri" style="color:#1C1410;">🌾</div>
+                    <h3>Garri</h3>
+                    <p>Yellow and white garri, clean and well-fried. Sold by rubber for daily use, or by bag for resale.
+                    </p>
+                    <div class="tag-row"><span class="tag">By rubber</span><span class="tag">By bag (50kg)</span></div>
+                </div>
+                <div class="product-card">
+                    <div class="swatch palmoil">🛢️</div>
+                    <h3>Palm Oil</h3>
+                    <p>Pure, unbleached red palm oil. Sold by the bottle for the kitchen, or by drum for restaurants and
+                        shops.</p>
+                    <div class="tag-row"><span class="tag">By litre</span><span class="tag">By drum (25L)</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="prices" class="board-section">
+        <div class="wrap">
+            <div class="section-head">
+                <div class="eyebrow" style="color:var(--gold);">Pricing</div>
+                <h2>Buying small or buying big?</h2>
+                <p style="color:#C9BEAD;">Switch the board below. Prices change with quantity, not with who's asking —
+                    every customer gets the same fair rate.</p>
+            </div>
+
+            <div class="toggle-wrap">
+                <div class="toggle">
+                    <button id="retailBtn" class="active" onclick="setMode('retail')">Retail</button>
+                    <button id="wholesaleBtn" onclick="setMode('wholesale')">Wholesale</button>
+                </div>
+            </div>
+
+            <div class="board">
+                <div class="board-row head">
+                    <div>Product</div>
+                    <div class="unit-col">Unit</div>
+                    <div>Price</div>
+                </div>
+                <div class="board-row" data-product="Stockfish">
+                    <div class="item">Stockfish<small id="stockfish-unit">Per piece</small></div>
+                    <div class="unit-col mono" id="stockfish-unitcol">Piece</div>
+                    <div class="price" id="stockfish-price">Call for rate</div>
+                </div>
+                <div class="board-row" data-product="Garri">
+                    <div class="item">Garri (Yellow/White)<small id="garri-unit">Per rubber</small></div>
+                    <div class="unit-col mono" id="garri-unitcol">Rubber</div>
+                    <div class="price" id="garri-price">Call for rate</div>
+                </div>
+                <div class="board-row" data-product="Palm Oil">
+                    <div class="item">Palm Oil<small id="palmoil-unit">Per litre bottle</small></div>
+                    <div class="unit-col mono" id="palmoil-unitcol">Litre</div>
+                    <div class="price" id="palmoil-price">Call for rate</div>
+                </div>
+            </div>
+            <div class="board-note" id="boardNote">Retail rates shown — perfect for home use. Prices may vary slightly
+                with market supply.</div>
+        </div>
+    </section>
+
+    <div class="trust-strip">
+        <div class="trust-item">
+            <div class="num">100%</div>
+            <div class="label">Hand-checked stock</div>
+        </div>
+        <div class="trust-item">
+            <div class="num">2</div>
+            <div class="label">Ways to buy: retail & wholesale</div>
+        </div>
+        <div class="trust-item">
+            <div class="num">3</div>
+            <div class="label">Core products, no shortcuts</div>
+        </div>
+        <div class="trust-item">
+            <div class="num">A</div>
+            <div class="label">Based in Lifecamp, Abuja</div>
+        </div>
+    </div>
+
+    <section id="order">
+        <div class="wrap">
+            <div class="section-head">
+                <div class="eyebrow">How to order</div>
+                <h2>Three steps. That's it.</h2>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">01</div>
+                    <h3>Tell us what you need</h3>
+                    <p>Message or call us with the product and quantity — even one wrap of garri is fine.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">02</div>
+                    <h3>We confirm price & pickup</h3>
+                    <p>We'll confirm the rate for your quantity and arrange pickup at Lifecamp or delivery within Abuja.
+                    </p>
+                </div>
+                <div class="step">
+                    <div class="step-num">03</div>
+                    <h3>Pay & collect</h3>
+                    <p>Pay on pickup or via transfer, and your order is packed and ready in Gold Foods branding.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pack-section">
+        <div class="wrap pack-inner">
+            <div>
+                <div class="eyebrow" style="color:var(--cream);">Coming soon</div>
+                <h2>Branded packaging, on every order</h2>
+                <p style="margin-top:16px;line-height:1.7;color:#F4DCC9;">Every bag and bottle will carry the Gold Foods
+                    mark, so your neighbours know exactly who to call next time. We're also printing flyers to drop
+                    across estates around Abuja.</p>
+            </div>
+            <div class="pack-visual">
+                <div class="bag">
+                    <div class="mark">GOLD<br><span class="dot">●</span> FOODS</div>
+                </div>
+                <p>PACKAGING PREVIEW — V1</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="contact-section">
+        <div class="wrap contact-grid">
+            <div>
+                <div class="eyebrow" style="color:var(--gold);">Get in touch</div>
+                <h2>Order or visit us</h2>
+                <p style="color:#C9BEAD;margin-top:14px;line-height:1.6;">Open every day for retail and wholesale
+                    orders. Shops and caterers welcome — ask about standing weekly orders.</p>
+            </div>
+            <div class="contact-card">
+                <div class="contact-row">
+                    <div class="icon-box">📞</div>
+                    <div>
+                        <h4>Call or WhatsApp</h4>
+                        <p><a href="tel:08036659186">0803 665 9186</a></p>
+                    </div>
+                </div>
+                <div class="contact-row">
+                    <div class="icon-box">📍</div>
+                    <div>
+                        <h4>Location</h4>
+                        <p>Lifecamp, Abuja</p>
+                    </div>
+                </div>
+                <div class="contact-row" style="margin-bottom:24px;">
+                    <div class="icon-box">🛒</div>
+                    <div>
+                        <h4>Buying</h4>
+                        <p>Individuals & wholesale</p>
+                    </div>
+                </div>
+                <table class="hours-table">
+                    <tr>
+                        <td>Mon — Sat</td>
+                        <td>8:00 AM – 7:00 PM</td>
+                    </tr>
+                    <tr>
+                        <td>Sunday</td>
+                        <td>12:00 PM – 6:00 PM</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <span>GOLD FOODS</span> — Lifecamp, Abuja · 0803 665 9186 · © 2026
+    </footer>
+
+    <script>
+        const menuBtn = document.getElementById('menuBtn');
+        const navLinks = document.getElementById('navLinks');
+        menuBtn.addEventListener('click', () => navLinks.classList.toggle('open'));
+        navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+        const prices = {
+            retail: {
+                stockfish: { unit: "Per piece", col: "Piece", price: "Call for rate" },
+                garri: { unit: "Per rubber", col: "Rubber", price: "Call for rate" },
+                palmoil: { unit: "Per litre bottle", col: "Litre", price: "Call for rate" }
+            },
+            wholesale: {
+                stockfish: { unit: "Per carton", col: "Carton", price: "Call for rate" },
+                garri: { unit: "Per bag (50kg)", col: "Bag", price: "Call for rate" },
+                palmoil: { unit: "Per drum (25L)", col: "Drum", price: "Call for rate" }
+            }
+        };
+
+        function setMode(mode) {
+            document.getElementById('retailBtn').classList.toggle('active', mode === 'retail');
+            document.getElementById('wholesaleBtn').classList.toggle('active', mode === 'wholesale');
+            const data = prices[mode];
+            Object.keys(data).forEach(key => {
+                document.getElementById(key + '-unit').textContent = data[key].unit;
+                document.getElementById(key + '-unitcol').textContent = data[key].col;
+                document.getElementById(key + '-price').textContent = data[key].price;
+            });
+            document.getElementById('boardNote').textContent = mode === 'retail'
+                ? "Retail rates shown — perfect for home use. Prices may vary slightly with market supply."
+                : "Wholesale rates shown — ideal for shops, caterers and resellers. Bulk discounts available on standing orders.";
+        }
+    </script>
+
+</body>
+
+</html>
