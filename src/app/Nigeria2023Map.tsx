@@ -773,14 +773,285 @@ export default function Nigeria2023Map() {
                   )}
                 </section>
               )}
+              {/* Find a place */}
+              <section>
+                <div className="flex items-center justify-between">
+                  <h2 className="sec-title">Find a place</h2>
+                  {stateFilter !== "ALL" && (
+                    <button onClick={resetView} className="text-xs font-semibold underline underline-offset-2 mb-2">
+                      Back to national view
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <select
+                    className="field"
+                    value={stateFilter}
+                    onChange={e => {
+                      const v = e.target.value;
+                      if (v === "ALL") resetView(); else zoomToState(v);
+                    }}
+                  >
+                    <option value="ALL">All of Nigeria</option>
+                    {Object.keys(STATE_BOUNDS).sort().map(st => (
+                      <option key={st} value={st}>{st} ({STATE_BOUNDS[st].lgas} LGAs)</option>
+                    ))}
+                  </select>
+                  {year === 2023 && (
+                    <input
+                      type="text"
+                      className="field"
+                      placeholder="Search an LGA…"
+                      value={searchQuery}
+                      onChange={e => {
+                        const q = e.target.value.toLowerCase().trim();
+                        setSearchQuery(e.target.value);
+                        if (!q) return;
+                        const found = lgaData.find(l =>
+                          l.lgaName.toLowerCase().includes(q) || l.state.toLowerCase().includes(q)
+                        );
+                        if (found) {
+                          zoomToState(found.state);
+                          const vec = computeShiftVector(found, currentModel, currentScale);
+                          pinLga(found, vec);
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+              </section>
 
-              {/* Find a place + Models + Legend + Pinned + Controls (same structure as before) */}
-              {/* … keep the rest of the sidebar from previous version … */}
+              {/* Models (2023 only) */}
+              {year === 2023 && (
+                <section>
+                  <h2 className="sec-title">What to show</h2>
+                  <div className="space-y-1">
+                    {models.map(m => (
+                      <button
+                        key={m.id}
+                        style={{ "--c": m.color } as React.CSSProperties}
+                        className={`model-btn ${currentModel === m.id ? "active" : ""}`}
+                        onClick={() => setCurrentModel(m.id)}
+                      >
+                        <div className="t">{m.label}</div>
+                        <div className="d">{m.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Legend */}
+              <section className="card">
+                <h2 className="sec-title">Map legend</h2>
+                <div className="space-y-2 text-xs">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#2563eb]" /> APC</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#dc2626]" /> PDP</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#16a34a]" /> LP</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#9333ea]" /> NNPP</span>
+                  </div>
+                  <p className="text-[color:var(--muted)] leading-relaxed">
+                    {year === 2023
+                      ? "Arrow colour = leading party. Length ∝ size of the lead."
+                      : "Arrow colour and length show the APC–PDP margin for each state."}
+                  </p>
+                </div>
+              </section>
+
+              {/* Pinned LGA */}
+              <section className="rounded-lg bg-[color:var(--ink)] text-white p-4 space-y-2.5">
+                <div className="flex items-start justify-between gap-3 border-b border-white/15 pb-2.5">
+                  <div className="min-w-0">
+                    <div className="text-xs text-white/60">Selected area</div>
+                    <h3 className="serif text-xl font-bold leading-tight break-words">
+                      {selectedLga ? selectedLga.lga.lgaName : "Pick an LGA"}
+                    </h3>
+                  </div>
+                  <span className="shrink-0 text-xs font-semibold text-white/70 pt-4">
+                    {selectedLga ? selectedLga.lga.state : "Nigeria"}
+                  </span>
+                </div>
+                {selectedLga ? (
+                  <div className="space-y-2 text-xs">
+                    <p className="text-white/90 text-[13px] leading-relaxed">{selectedLga.vec.narrative}</p>
+                    <div className="grid grid-cols-2 gap-2 text-center pt-1">
+                      <div className="bg-slate-800/80 p-2 rounded border border-slate-700">
+                        <div className="text-[10px] text-slate-400 uppercase font-bold">Votes</div>
+                        <div className="text-[11px] font-bold text-slate-200 leading-snug">
+                          APC {selectedLga.lga.votes.apc.toLocaleString()}<br />
+                          LP {selectedLga.lga.votes.lp.toLocaleString()}<br />
+                          PDP {selectedLga.lga.votes.pdp.toLocaleString()}<br />
+                          NNPP {selectedLga.lga.votes.nnpp.toLocaleString()}
+                        </div>
+                      </div>
+                      <div className="bg-slate-800/80 p-2 rounded border border-slate-700">
+                        <div className="text-[10px] text-slate-400 uppercase font-bold">Margin</div>
+                        <div className="text-xs font-bold text-emerald-400">
+                          {selectedLga.vec.shiftPp >= 0 ? "+" : ""}{selectedLga.vec.shiftPp.toFixed(1)} pp
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-white/70 text-[13px] leading-relaxed">
+                    Click an arrow or search for an LGA to see its vote counts, winner and margin.
+                  </p>
+                )}
+              </section>
+
+              {/* Controls */}
+              <section className="space-y-3 text-[13px]">
+                <div>
+                  <div className="flex justify-between mb-1.5">
+                    <label className="font-semibold">Arrow length</label>
+                    <span className="font-semibold tabular-nums">{currentScale.toFixed(1)}x</span>
+                  </div>
+                  <input
+                    type="range" min="0.4" max="2.0" step="0.1" value={currentScale}
+                    onChange={e => setCurrentScale(parseFloat(e.target.value))}
+                    className="w-full accent-[color:var(--ink)] cursor-pointer"
+                  />
+                </div>
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="font-semibold">Show state names</span>
+                  <input
+                    type="checkbox" checked={showLabels}
+                    onChange={e => setShowLabels(e.target.checked)}
+                    className="w-4 h-4 accent-[color:var(--ink)] cursor-pointer"
+                  />
+                </label>
+              </section>
             </aside>
 
+            {/* Map */}
             <main className="order-1 lg:order-2 relative flex flex-col h-[72vh] min-h-[460px] lg:h-screen lg:max-h-[920px] lg:sticky lg:top-0 lg:self-start">
-              {/* Zoom controls + SVG (same as previous, with year-aware arrows) */}
-              {/* For 2015/2019 the arrows already encode the APC–PDP margin */}
+              <div className="absolute top-3 left-3 lg:left-6 z-10 flex items-center rounded-md bg-white border border-[color:var(--rule)] overflow-hidden">
+                <button className="map-btn" onClick={() => setZoomLevel(z => Math.min(4.5, z + 0.35))}>+</button>
+                <button className="map-btn border-l border-[color:var(--rule)]" onClick={() => setZoomLevel(z => Math.max(0.7, z - 0.35))}>−</button>
+                <button className="map-btn border-l border-[color:var(--rule)]" onClick={resetView}>Reset</button>
+              </div>
+
+              <div className="flex-1 relative min-h-[460px] overflow-hidden">
+                <svg
+                  ref={svgRef}
+                  viewBox="0 0 744.24182 599.92847"
+                  className="absolute inset-0 w-full h-full cursor-crosshair select-none"
+                  onMouseLeave={hideTooltip}
+                >
+                  <defs>
+                    <marker id="arrow-apc" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
+                      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563eb" />
+                    </marker>
+                    <marker id="arrow-pdp" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
+                      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#dc2626" />
+                    </marker>
+                    <marker id="arrow-lp" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
+                      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#16a34a" />
+                    </marker>
+                    <marker id="arrow-nnpp" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
+                      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#9333ea" />
+                    </marker>
+                    <marker id="arrow-neutral" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
+                      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#ea580c" />
+                    </marker>
+                  </defs>
+
+                  <g ref={viewportRef}>
+                    <g>
+                      {Object.entries(STATE_BOUNDS).map(([name, info]) => (
+                        <path
+                          key={name}
+                          d={STATE_PATHS[info.id] || ""}
+                          fill="#e5e7e2"
+                          strokeLinejoin="round"
+                          className="state-path cursor-pointer"
+                          onClick={() => zoomToState(name)}
+                        />
+                      ))}
+                    </g>
+
+                    <g className="pointer-events-none select-none" style={{ opacity: showLabels ? 1 : 0 }}>
+                      {Object.entries(STATE_BOUNDS).map(([name, info]) => (
+                        <text
+                          key={name}
+                          x={info.cx}
+                          y={info.cy - 8}
+                          fontSize={name.length > 10 ? 6 : 7.5}
+                          fontWeight="700"
+                          fill="#2b3540"
+                          textAnchor="middle"
+                          paintOrder="stroke"
+                          stroke="#ffffff"
+                          strokeWidth="2.2"
+                          strokeOpacity="0.85"
+                        >
+                          {name === "FCT Abuja" ? "FCT" : name}
+                        </text>
+                      ))}
+                    </g>
+
+                    <g>
+                      {year === 2023
+                        ? lgaData.map(lga => {
+                          const vec = computeShiftVector(lga, currentModel, currentScale);
+                          const dx = Math.cos(vec.angle) * vec.length;
+                          const dy = Math.sin(vec.angle) * vec.length;
+                          return (
+                            <g
+                              key={lga.id}
+                              className="lga-vector-group cursor-pointer"
+                              onMouseEnter={e => inspectLga(lga, vec, e)}
+                              onClick={() => pinLga(lga, vec)}
+                            >
+                              <circle cx={lga.cx} cy={lga.cy} r="1.1" fill="#101820" opacity="0.28" />
+                              <line x1={lga.cx} y1={lga.cy} x2={lga.cx + dx} y2={lga.cy + dy}
+                                stroke="transparent" strokeWidth="16" strokeLinecap="round" />
+                              <line
+                                className="visible-arrow"
+                                x1={lga.cx} y1={lga.cy}
+                                x2={lga.cx + dx} y2={lga.cy + dy}
+                                stroke={vec.color} strokeWidth="1.6" strokeLinecap="round"
+                                markerEnd={`url(#${vec.markerId})`}
+                              />
+                            </g>
+                          );
+                        })
+                        : Object.entries(STATE_BOUNDS).map(([name, info]) => {
+                          const res = getStateResult(year, name);
+                          if (!res) return null;
+                          const total = res.apc + res.pdp || 1;
+                          const margin = ((res.apc - res.pdp) / total) * 100;
+                          const color = margin >= 0 ? "#2563eb" : "#dc2626";
+                          const marker = margin >= 0 ? "arrow-apc" : "arrow-pdp";
+                          const angle = margin >= 0 ? -Math.PI / 4 : 3 * Math.PI / 4;
+                          const len = Math.min(28, Math.max(8, Math.abs(margin) * 0.35 * currentScale));
+                          const dx = Math.cos(angle) * len;
+                          const dy = Math.sin(angle) * len;
+                          return (
+                            <g key={name} className="lga-vector-group cursor-pointer"
+                              onClick={() => zoomToState(name)}>
+                              <circle cx={info.cx} cy={info.cy} r="2" fill="#101820" opacity="0.3" />
+                              <line
+                                className="visible-arrow"
+                                x1={info.cx} y1={info.cy}
+                                x2={info.cx + dx} y2={info.cy + dy}
+                                stroke={color} strokeWidth="2.2" strokeLinecap="round"
+                                markerEnd={`url(#${marker})`}
+                              />
+                            </g>
+                          );
+                        })}
+                    </g>
+                  </g>
+                </svg>
+              </div>
+
+              <p className="px-3 lg:pl-6 py-3 text-xs leading-relaxed text-[color:var(--muted)] border-t border-[color:var(--rule)] max-w-[100ch]">
+                {year === 2023
+                  ? "Each arrow is one of Nigeria’s 774 LGAs. Longer arrows mean wider leads."
+                  : `State-level results for the ${year} presidential election. One arrow per state showing the APC–PDP margin.`}
+              </p>
             </main>
           </div>
         )}
@@ -807,4 +1078,4 @@ export default function Nigeria2023Map() {
       )}
     </>
   );
-}
+};
