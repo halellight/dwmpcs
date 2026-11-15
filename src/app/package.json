@@ -1,0 +1,1 @@
+{"name":"nivo-nigeria-elections","private":true,"scripts":{"typecheck":"tsc","build":"esbuild nivo.ts --bundle --minify --target=es2020 --outfile=dist/nivo.js","dev":"esbuild nivo.ts --bundle --target=es2020 --outfile=dist/nivo.js --watch"},"devDependencies":{"esbuild":"^0.25.0","typescript":"^5.6.0"}}
