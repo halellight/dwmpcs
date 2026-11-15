@@ -1,7 +1,38 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
+import confetti from "canvas-confetti";
+import {
+  BookOpen,
+  GraduationCap,
+  Sparkles,
+  Volume2,
+  VolumeX,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  ArrowRight,
+  ArrowLeft,
+  Users,
+  ShieldCheck,
+  Share2,
+  Download,
+  Copy,
+  Check,
+  RotateCcw,
+  Calendar,
+  Trash2,
+  Send,
+  Search,
+  Flame,
+  Award,
+  HelpCircle,
+  UserCheck,
+  ChevronRight,
+  Info
+} from "lucide-react";
 
 /* RelayLearn: learner app and educator dashboard in one component.
-   Data lives in localStorage (demo). In a pilot, swap load/save for the community node's local API. */
+   Data lives in localStorage. Designed for community learning nodes,
+   shared tablets, and mobile learners. */
 
 type Q = [string, string[], number, string];
 type Rec = { s: number; m: number[] };
@@ -9,25 +40,58 @@ type Learner = { id: string; f: string; c: string; p: Record<string, Rec>; t: nu
 type Store = { cur: string | null; ls: Learner[] };
 
 const LS = "relaylearn.v2";
-const CLS = ["JSS1A", "JSS1B", "JSS2A"];
+const CLS = ["JSS1A", "JSS1B", "JSS2A", "JSS2B", "JSS3A", "JSS3B"];
 const AL = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
-const LES: { id: string; t: string; pts: string[]; q: Q[] }[] = [
-  { id: "eng", t: "English: Intonation",
-    pts: ["Intonation is how your voice rises and falls when you speak.", "Yes or no questions usually rise at the end: “Are you coming?”", "Statements usually fall at the end: “Close the door.”"],
-    q: [["Intonation is…", ["the rise and fall of the voice", "the spelling of a word", "how fast you write"], 0, "Meaning of intonation"],
-        ["Which usually ends with a falling tone?", ["Close the door.", "Are you coming?", "Is it ready?"], 0, "Falling tone"],
-        ["“Is it ready?” usually ends with…", ["a falling tone", "a rising tone", "no change"], 1, "Rising tone"]] },
-  { id: "math", t: "Maths: Fractions",
-    pts: ["Ada shares 8 pieces of akara equally between 2 friends. Each gets 4 of 8, which is ½ of the akara.", "The top number is the numerator. The bottom number is the denominator.", "Same denominator? Add the tops: 2/7 + 3/7 = 5/7."],
-    q: [["In 3/8, which number is the denominator?", ["3", "8", "11"], 1, "Denominator"],
-        ["What is 2/7 + 3/7?", ["5/14", "5/7", "6/7"], 1, "Adding fractions"],
-        ["Which fraction equals ½?", ["2/4", "2/5", "1/4"], 0, "Equivalent fractions"]] },
-  { id: "sci", t: "Science: States of Matter",
-    pts: ["Solids keep their shape. Liquids take the shape of the container. Gases fill the whole container.", "Melting turns a solid into a liquid. Freezing does the reverse.", "Wet clothes dry on a line by evaporation: liquid water becomes a gas."],
-    q: [["Ice melting becomes…", ["liquid water", "a gas", "a harder solid"], 0, "Melting"],
-        ["Wet clothes drying on a line is…", ["condensation", "evaporation", "freezing"], 1, "Evaporation"],
-        ["Which has no fixed shape or volume?", ["stone", "water", "air"], 2, "Gases"]] },
+const LES: { id: string; t: string; pts: string[]; q: Q[]; icon: string; category: string }[] = [
+  {
+    id: "eng",
+    t: "English: Intonation",
+    category: "Languages",
+    icon: "🗣️",
+    pts: [
+      "Intonation is how your voice rises and falls when you speak.",
+      "Yes or no questions usually rise at the end: “Are you coming?”",
+      "Statements usually fall at the end: “Close the door.”"
+    ],
+    q: [
+      ["Intonation is…", ["the rise and fall of the voice", "the spelling of a word", "how fast you write"], 0, "Meaning of intonation"],
+      ["Which usually ends with a falling tone?", ["Close the door.", "Are you coming?", "Is it ready?"], 0, "Falling tone"],
+      ["“Is it ready?” usually ends with…", ["a falling tone", "a rising tone", "no change"], 1, "Rising tone"]
+    ]
+  },
+  {
+    id: "math",
+    t: "Maths: Fractions",
+    category: "Mathematics",
+    icon: "➗",
+    pts: [
+      "Ada shares 8 pieces of akara equally between 2 friends. Each gets 4 of 8, which is ½ of the akara.",
+      "The top number is the numerator. The bottom number is the denominator.",
+      "Same denominator? Add the tops: 2/7 + 3/7 = 5/7."
+    ],
+    q: [
+      ["In 3/8, which number is the denominator?", ["3", "8", "11"], 1, "Denominator"],
+      ["What is 2/7 + 3/7?", ["5/14", "5/7", "6/7"], 1, "Adding fractions"],
+      ["Which fraction equals ½?", ["2/4", "2/5", "1/4"], 0, "Equivalent fractions"]
+    ]
+  },
+  {
+    id: "sci",
+    t: "Science: States of Matter",
+    category: "Basic Science",
+    icon: "🔬",
+    pts: [
+      "Solids keep their shape. Liquids take the shape of the container. Gases fill the whole container.",
+      "Melting turns a solid into a liquid. Freezing does the reverse.",
+      "Wet clothes dry on a line by evaporation: liquid water becomes a gas."
+    ],
+    q: [
+      ["Ice melting becomes…", ["liquid water", "a gas", "a harder solid"], 0, "Melting"],
+      ["Wet clothes drying on a line is…", ["condensation", "evaporation", "freezing"], 1, "Evaporation"],
+      ["Which has no fixed shape or volume?", ["stone", "water", "air"], 2, "Gases"]
+    ]
+  },
 ];
 
 /* name, days since last active, scores for English, Maths, Science (-1 = not started) */
@@ -53,24 +117,25 @@ const load = (): Store => {
   try {
     const d = JSON.parse(localStorage.getItem(LS) || "null");
     if (d && Array.isArray(d.ls)) return d;
-  } catch {}
+  } catch { }
   return seed();
 };
 
 const days = (l: Learner) => (Date.now() - l.t) / 864e5;
-const ago = (l: Learner) => { const d = Math.floor(days(l)); return d < 1 ? "today" : d === 1 ? "yesterday" : `${d} days ago`; };
+const ago = (l: Learner) => {
+  const d = Math.floor(days(l));
+  return d < 1 ? "Today" : d === 1 ? "Yesterday" : `${d}d ago`;
+};
 const lesson = (id: string) => LES.find((x) => x.id === id)!;
 const done = (l: Learner) => LES.filter((x) => l.p[x.id]).length;
 const bucket = (r?: Rec) => (!r ? "n" : r.s === 3 ? "g" : r.s === 2 ? "a" : "r");
-const mkId = (ls: Learner[]) => { let id: string; do { id = "RL-" + Array.from({ length: 4 }, () => AL[Math.floor(Math.random() * AL.length)]).join(""); } while (ls.some((l) => l.id === id)); return id; };
-
-function speak(text: string) {
-  const w = typeof window !== "undefined" ? window.speechSynthesis : undefined;
-  if (!w) return;
-  if (w.speaking) { w.cancel(); return; }
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "en-NG"; u.rate = 0.9; w.speak(u);
-}
+const mkId = (ls: Learner[]) => {
+  let id: string;
+  do {
+    id = "RL-" + Array.from({ length: 4 }, () => AL[Math.floor(Math.random() * AL.length)]).join("");
+  } while (ls.some((l) => l.id === id));
+  return id;
+};
 
 export default function RelayLearn() {
   const [S, setS] = useState<Store>(load);
@@ -79,46 +144,187 @@ export default function RelayLearn() {
   const [ans, setAns] = useState<Record<number, number>>({});
   const [plan, setPlan] = useState(false);
   const [code, setCode] = useState("");
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
   const [el, setEl] = useState("eng");
   const [cf, setCf] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
-  const [nm, setNm] = useState(""); const [cl, setCl] = useState(CLS[0]); const [cs, setCs] = useState(false);
-  const [tc, setTc] = useState(""); const [inc, setInc] = useState(false);
+  const [nm, setNm] = useState("");
+  const [cl, setCl] = useState(CLS[0]);
+  const [cs, setCs] = useState(false);
+  const [tc, setTc] = useState("");
+  const [inc, setInc] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
-  useEffect(() => { try { localStorage.setItem(LS, JSON.stringify(S)); } catch {} }, [S]);
+  // Educator search & filter
+  const [eduSearch, setEduSearch] = useState("");
+  const [eduFilter, setEduFilter] = useState<"all" | "attention" | "active">("all");
+  const [eduClassFilter, setEduClassFilter] = useState<string>("all");
 
-  const upd = (fn: (s: Store) => void) => setS((p) => { const n: Store = JSON.parse(JSON.stringify(p)); fn(n); return n; });
+  const synthRef = useRef<SpeechSynthesis | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS, JSON.stringify(S));
+    } catch { }
+  }, [S]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      synthRef.current = window.speechSynthesis;
+    }
+    return () => {
+      synthRef.current?.cancel();
+    };
+  }, []);
+
+  const upd = (fn: (s: Store) => void) =>
+    setS((p) => {
+      const n: Store = JSON.parse(JSON.stringify(p));
+      fn(n);
+      return n;
+    });
+
   const me = S.ls.find((l) => l.id === S.cur);
-  const go = (t: "learn" | "edu") => { setTab(t); setLes(null); setMsg(""); window.speechSynthesis?.cancel(); window.scrollTo?.(0, 0); };
-  const pick = (id: string | null) => { upd((s) => { s.cur = id; }); setLes(null); setCode(""); setPlan(false); setMsg(""); };
+
+  const stopAudio = () => {
+    if (synthRef.current) {
+      synthRef.current.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
+  const speak = (text: string) => {
+    const synth = synthRef.current || (typeof window !== "undefined" ? window.speechSynthesis : null);
+    if (!synth) return;
+
+    if (synth.speaking) {
+      stopAudio();
+      return;
+    }
+
+    // Clean text for natural speech rhythm
+    const cleaned = text
+      .replace(/[:•]/g, ". ")
+      .replace(/½/g, "one half")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const u = new SpeechSynthesisUtterance(cleaned);
+
+    // Pick best available English voice
+    const voices = synth.getVoices();
+    if (voices.length > 0) {
+      const bestVoice =
+        voices.find((v) => v.lang === "en-NG" || v.lang.startsWith("en-NG")) ||
+        voices.find(
+          (v) =>
+            v.lang.startsWith("en") &&
+            (v.name.includes("Natural") ||
+              v.name.includes("Online") ||
+              v.name.includes("Google") ||
+              v.name.includes("Jenny") ||
+              v.name.includes("Aria") ||
+              v.name.includes("Samantha"))
+        ) ||
+        voices.find((v) => v.lang.startsWith("en")) ||
+        voices[0];
+
+      if (bestVoice) {
+        u.voice = bestVoice;
+      }
+    }
+
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    u.onend = () => setIsSpeaking(false);
+    u.onerror = () => setIsSpeaking(false);
+
+    setIsSpeaking(true);
+    synth.speak(u);
+  };
+
+  const go = (t: "learn" | "edu") => {
+    setTab(t);
+    setLes(null);
+    setMsg("");
+    stopAudio();
+    window.scrollTo?.({ top: 0, behavior: "smooth" });
+  };
+
+  const pick = (id: string | null) => {
+    upd((s) => {
+      s.cur = id;
+    });
+    setLes(null);
+    setCode("");
+    setPlan(false);
+    setMsg("");
+    stopAudio();
+  };
 
   const create = () => {
     const n = nm.trim().slice(0, 20);
-    if (!n) return setMsg("Please type a first name or nickname.");
+    if (!n) return setMsg("Please enter a first name or nickname.");
     if (!cs) return setMsg("A parent or guardian must agree first.");
     const id = mkId(S.ls);
-    upd((s) => { s.ls.push({ id, f: n, c: cl, p: {}, t: Date.now() }); s.cur = id; });
-    setNm(""); setCs(false); setMsg(`Your code is ${id}. Keep it safe.`);
+    upd((s) => {
+      s.ls.push({ id, f: n, c: cl, p: {}, t: Date.now() });
+      s.cur = id;
+    });
+    setNm("");
+    setCs(false);
+    setMsg(`Welcome ${n}! Your code is ${id}. Keep it safe.`);
   };
 
   const answer = (i: number, o: number) => {
     if (!les || ans[i] != null) return;
     const next = { ...ans, [i]: o };
     setAns(next);
+
     if (Object.keys(next).length === 3) {
       const L = lesson(les);
       const m = L.q.map((q, j) => (next[j] !== q[2] ? j : -1)).filter((j) => j >= 0);
-      upd((s) => { const l = s.ls.find((x) => x.id === s.cur)!; l.p[L.id] = { s: 3 - m.length, m }; l.t = Date.now(); });
+      const score = 3 - m.length;
+      upd((s) => {
+        const l = s.ls.find((x) => x.id === s.cur)!;
+        l.p[L.id] = { s: score, m };
+        l.t = Date.now();
+      });
+
+      // Pass the baton celebration
+      try {
+        confetti({
+          particleCount: score === 3 ? 80 : 45,
+          spread: 70,
+          origin: { y: 0.65 },
+          colors: ["#10b981", "#f59e0b", "#3b82f6", "#10201a"],
+        });
+      } catch { }
     }
   };
 
   const makeCode = () => {
     if (!me) return;
     const p: Record<string, number[]> = {};
-    LES.forEach((x) => { if (me.p[x.id]) p[x.id] = me.p[x.id].m; });
+    LES.forEach((x) => {
+      if (me.p[x.id]) p[x.id] = me.p[x.id].m;
+    });
     const o: { i: string; c: string; p: typeof p; f?: string } = { i: me.id, c: me.c, p };
     if (inc) o.f = me.f;
-    setCode("RL1." + btoa(unescape(encodeURIComponent(JSON.stringify(o)))));
+    const str = "RL1." + btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+    setCode(str);
+  };
+
+  const copyToClipboard = (text: string, isPassport = false) => {
+    navigator.clipboard?.writeText(text);
+    if (isPassport) {
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2200);
+    } else {
+      setCopiedId(true);
+      setTimeout(() => setCopiedId(false), 2200);
+    }
   };
 
   const importCode = () => {
@@ -131,257 +337,1206 @@ export default function RelayLearn() {
       const p: Record<string, Rec> = {};
       LES.forEach((x) => {
         const m = o.p?.[x.id];
-        if (Array.isArray(m)) { const u = m.filter((n: number, i: number) => [0, 1, 2].includes(n) && m.indexOf(n) === i); p[x.id] = { s: 3 - u.length, m: u }; }
+        if (Array.isArray(m)) {
+          const u = m.filter((n: number, i: number) => [0, 1, 2].includes(n) && m.indexOf(n) === i);
+          p[x.id] = { s: 3 - u.length, m: u };
+        }
       });
       upd((s) => {
         const ex = s.ls.find((z) => z.id === id);
-        if (ex) { LES.forEach((x) => { if (p[x.id] && (!ex.p[x.id] || p[x.id].s > ex.p[x.id].s)) ex.p[x.id] = p[x.id]; }); ex.t = Date.now(); }
-        else s.ls.push({ id, f: String(o.f || "Learner").slice(0, 20), c: CLS.includes(o.c) ? o.c : CLS[0], p, t: Date.now() });
+        if (ex) {
+          LES.forEach((x) => {
+            if (p[x.id] && (!ex.p[x.id] || p[x.id].s > ex.p[x.id].s)) ex.p[x.id] = p[x.id];
+          });
+          ex.t = Date.now();
+        } else {
+          s.ls.push({
+            id,
+            f: String(o.f || "Learner").slice(0, 20),
+            c: CLS.includes(o.c) ? o.c : CLS[0],
+            p,
+            t: Date.now(),
+          });
+        }
         s.cur = id;
       });
-      setTc(""); setMsg("Record imported. Welcome to your new school.");
-    } catch { setMsg("That code could not be read. Check it and try again."); }
+      setTc("");
+      setMsg("Record imported. Welcome to your new school.");
+    } catch {
+      setMsg("That code could not be read. Check it and try again.");
+    }
   };
 
   const steps = (l: Learner) => [
     ...LES.filter((x) => !l.p[x.id]).map((x) => ({ x, k: "New lesson" })),
     ...LES.filter((x) => l.p[x.id] && l.p[x.id].s < 3).map((x) => ({ x, k: "Revise" })),
   ];
-  const Plan = ({ l }: { l: Learner }) => {
+
+  /* ------------------- CATCH-UP PLAN HELPER ------------------- */
+  const renderPlan = (l: Learner) => {
     const it = steps(l);
     return it.length ? (
-      <ol className="plan">{it.map((r, i) => (
-        <li key={r.x.id}><b>Day {i + 1}</b><span>{r.x.t}<small>{r.k}, about 8 minutes</small></span>
-          <button className="ghost" onClick={() => { setLes(r.x.id); setAns({}); setTab("learn"); }}>Open</button></li>
-      ))}</ol>
-    ) : <p>You are all caught up.</p>;
+      <div className="space-y-2 mt-3">
+        {it.map((r, i) => (
+          <div
+            key={r.x.id}
+            className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200"
+          >
+            <div className="flex items-center gap-3">
+              <span className="w-8 h-8 rounded-xl bg-amber-400 text-slate-900 font-bold text-xs flex items-center justify-center shrink-0">
+                Day {i + 1}
+              </span>
+              <div>
+                <span className="font-semibold text-sm text-slate-900 block">
+                  {r.x.t}
+                </span>
+                <span className="text-xs text-slate-600">
+                  {r.k}, about 8 minutes
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setLes(r.x.id);
+                setAns({});
+                setTab("learn");
+                window.scrollTo?.({ top: 0, behavior: "smooth" });
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-emerald-700 hover:text-white text-xs font-semibold text-slate-800 border border-slate-300 transition"
+            >
+              Open
+            </button>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p className="text-sm text-emerald-800 font-medium py-2">You are all caught up.</p>
+    );
   };
 
-  /* ---------- learner ---------- */
-  const Who = () => (
-    <>
-      <section className="card">
-        <h2>Who is learning on this device?</h2>
-        <p className="mut">Devices are shared, so pick your name. No password or surname is needed.</p>
-        <div className="chips">{S.ls.map((x) => (
-          <button key={x.id} className="chip" onClick={() => pick(x.id)}>{x.f}<small>{x.id}{x.x ? " (sample)" : ""}</small></button>
-        ))}</div>
+  /* ------------------- LEARNER SELECTION VIEW ------------------- */
+  const renderWho = () => (
+    <div className="space-y-6">
+      {/* Shared Device Selector */}
+      <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 mb-3">
+          <Users className="w-3.5 h-3.5" />
+          Shared Device
+        </div>
+        <h2 className="text-2xl sm:text-3xl font-bold font-sans text-slate-900">
+          Who is learning on this device?
+        </h2>
+        <p className="text-slate-600 text-sm sm:text-base mt-1">
+          Devices are shared, so pick your name. No password or surname is needed.
+        </p>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-6">
+          {S.ls.map((x) => {
+            const completedCount = done(x);
+            return (
+              <button
+                key={x.id}
+                onClick={() => pick(x.id)}
+                className="group relative flex flex-col items-start p-4 text-left rounded-2xl border-2 border-slate-200 hover:border-emerald-700 bg-slate-50 hover:bg-emerald-50/50 transition duration-150 shadow-sm"
+              >
+                <div className="w-9 h-9 rounded-xl bg-[#0f3d2e] text-white font-bold flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform">
+                  {x.f.slice(0, 1)}
+                </div>
+                <div className="mt-3 font-semibold text-slate-900 text-base group-hover:text-emerald-900">
+                  {x.f}
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
+                  <span className="font-mono font-medium text-slate-700">{x.id}</span>
+                  {x.x && <span className="text-[10px] bg-slate-200 px-1 rounded text-slate-600">sample</span>}
+                </div>
+                <div className="mt-2 text-[11px] text-emerald-700 font-medium flex items-center gap-1">
+                  <Award className="w-3 h-3" />
+                  {completedCount}/{LES.length} completed
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </section>
-      <section className="card">
-        <h2>New learner</h2>
-        <input value={nm} maxLength={20} onChange={(e) => setNm(e.target.value)} placeholder="First name or nickname" aria-label="First name or nickname" />
-        <select value={cl} onChange={(e) => setCl(e.target.value)} aria-label="Class">{CLS.map((c) => <option key={c}>{c}</option>)}</select>
-        <label className="chk"><input type="checkbox" checked={cs} onChange={(e) => setCs(e.target.checked)} /> A parent or guardian agrees we keep this learner’s first name and scores.</label>
-        <button className="pri" onClick={create}>Create my learning code</button>
-      </section>
-      <section className="card">
-        <h2>Joining from another school?</h2>
-        <p className="mut">Paste the transfer code from your last school. Your progress comes with you.</p>
-        <input value={tc} onChange={(e) => setTc(e.target.value)} placeholder="RL1.…" aria-label="Transfer code" />
-        <button onClick={importCode}>Import my record</button>
-      </section>
-    </>
+
+      {/* Forms Grid */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Create Learner Card */}
+        <section className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mb-3">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <h3 className="text-xl font-bold font-sans text-slate-900">New learner</h3>
+            <p className="text-slate-600 text-xs sm:text-sm mt-1">
+              Pick a nickname. No surname, password, or phone number needed.
+            </p>
+
+            <div className="space-y-3.5 mt-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  First name or nickname
+                </label>
+                <input
+                  type="text"
+                  value={nm}
+                  maxLength={20}
+                  onChange={(e) => setNm(e.target.value)}
+                  placeholder="e.g. Amina"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Class
+                </label>
+                <select
+                  value={cl}
+                  onChange={(e) => setCl(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                >
+                  {CLS.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              <label className="flex items-start gap-2.5 pt-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={cs}
+                  onChange={(e) => setCs(e.target.checked)}
+                  className="mt-1 rounded text-emerald-700 focus:ring-emerald-700 h-4 w-4 border-slate-300"
+                />
+                <span className="text-xs text-slate-600 leading-snug">
+                  A parent or guardian agrees we keep this learner’s first name and scores.
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <button
+            onClick={create}
+            className="mt-6 w-full py-3 px-4 rounded-xl bg-[#0f3d2e] hover:bg-[#165541] active:scale-[0.99] text-white font-semibold text-sm transition shadow-sm flex items-center justify-center gap-2"
+          >
+            <UserCheck className="w-4 h-4" />
+            Create my learning code
+          </button>
+        </section>
+
+        {/* Transfer Import Card */}
+        <section className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-800 flex items-center justify-center mb-3">
+              <Download className="w-5 h-5" />
+            </div>
+            <h3 className="text-xl font-bold font-sans text-slate-900">Joining from another school?</h3>
+            <p className="text-slate-600 text-xs sm:text-sm mt-1">
+              Paste the transfer code from your last school. Your progress comes with you.
+            </p>
+
+            <div className="mt-4">
+              <label className="text-xs font-semibold text-slate-700 block mb-1">
+                Transfer code
+              </label>
+              <textarea
+                value={tc}
+                onChange={(e) => setTc(e.target.value)}
+                placeholder="RL1.…"
+                rows={3}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-mono text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={importCode}
+            disabled={!tc.trim()}
+            className="mt-6 w-full py-3 px-4 rounded-xl border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Import my record
+          </button>
+        </section>
+      </div>
+    </div>
   );
 
-  const Lesson = ({ l }: { l: Learner }) => {
-    const L = lesson(les!), n = Object.keys(ans).length, r = l.p[L.id];
+  /* ------------------- INTERACTIVE LESSON VIEW ------------------- */
+  const renderLesson = (l: Learner) => {
+    const L = lesson(les!);
+    const n = Object.keys(ans).length;
+    const r = l.p[L.id];
+
     return (
-      <>
-        <button className="ghost" onClick={() => { setLes(null); window.speechSynthesis?.cancel(); }}>Back to the track</button>
-        <section className="card">
-          <h2>{L.t}</h2>
-          <button className="pri" onClick={() => speak(L.t.replace(":", ".") + ". " + L.pts.join(" "))}>Listen or stop</button>
-          <ul>{L.pts.map((x) => <li key={x}>{x}</li>)}</ul>
+      <div className="space-y-6 max-w-3xl mx-auto">
+        {/* Navigation */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => {
+              setLes(null);
+              stopAudio();
+            }}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 hover:text-emerald-900 px-3 py-1.5 rounded-xl hover:bg-slate-200 transition"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to the track
+          </button>
+
+          <div className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" />
+            About 8 minutes
+          </div>
+        </div>
+
+        {/* Lesson Overview Card */}
+        <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+            <div>
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 uppercase tracking-wider">
+                {L.category}
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold font-sans text-slate-900 mt-2">
+                {L.t}
+              </h2>
+            </div>
+
+            <button
+              onClick={() => speak(L.t.replace(":", ".") + ". " + L.pts.join(". "))}
+              className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full font-semibold text-sm transition shadow-sm ${isSpeaking
+                ? "bg-amber-400 text-slate-950 ring-2 ring-amber-500 animate-pulse"
+                : "bg-[#0f3d2e] text-white hover:bg-[#165541]"
+                }`}
+            >
+              {isSpeaking ? (
+                <>
+                  <VolumeX className="w-4 h-4" />
+                  <span>Stop audio</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-4 h-4" />
+                  <span>Listen or stop</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="mt-6 space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Key lesson points
+            </h4>
+            <ul className="space-y-2.5">
+              {L.pts.map((x, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-sm sm:text-base leading-relaxed"
+                >
+                  <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-900 font-bold flex items-center justify-center shrink-0 text-xs mt-0.5">
+                    {idx + 1}
+                  </span>
+                  <span>{x}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
-        {L.q.map((q, i) => (
-          <section className="card" key={i}>
-            <h3>{i + 1}. {q[0]}</h3>
-            <div className="opts">{q[1].map((o, j) => (
-              <button key={o} className={ans[i] == null ? "" : j === q[2] ? "right" : j === ans[i] ? "wrong" : ""} onClick={() => answer(i, j)}>{o}</button>
-            ))}</div>
-          </section>
-        ))}
+
+        {/* Practice Questions */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-emerald-800" />
+              Check your understanding (3 questions)
+            </h3>
+            <span className="text-xs text-slate-600 font-medium">
+              {Object.keys(ans).length} of 3 answered
+            </span>
+          </div>
+
+          {L.q.map((q, i) => {
+            const chosen = ans[i];
+            const isAnswered = chosen != null;
+            const isCorrect = chosen === q[2];
+
+            return (
+              <section
+                key={i}
+                className={`bg-white border rounded-3xl p-6 transition shadow-sm ${isAnswered
+                  ? isCorrect
+                    ? "border-emerald-400 bg-emerald-50/40"
+                    : "border-rose-400 bg-rose-50/40"
+                  : "border-slate-200"
+                  }`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <h4 className="font-semibold text-slate-900 text-base sm:text-lg">
+                    <span className="text-emerald-800 font-bold mr-2">{i + 1}.</span>
+                    {q[0]}
+                  </h4>
+
+                  {isAnswered && (
+                    <span
+                      className={`shrink-0 inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${isCorrect
+                        ? "bg-emerald-100 text-emerald-900"
+                        : "bg-rose-100 text-rose-900"
+                        }`}
+                    >
+                      {isCorrect ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Correct
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="w-3.5 h-3.5" /> Review
+                        </>
+                      )}
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid gap-2.5 mt-4">
+                  {q[1].map((o, j) => {
+                    const isSelected = chosen === j;
+                    const isRightOption = j === q[2];
+                    let btnStyle =
+                      "border-slate-200 bg-slate-50 hover:border-slate-300 text-slate-800";
+
+                    if (isAnswered) {
+                      if (isRightOption) {
+                        btnStyle =
+                          "border-emerald-600 bg-emerald-100 text-emerald-950 font-semibold ring-1 ring-emerald-600";
+                      } else if (isSelected && !isCorrect) {
+                        btnStyle =
+                          "border-rose-500 bg-rose-100 text-rose-950 font-medium";
+                      } else {
+                        btnStyle = "border-slate-200 opacity-50 text-slate-500";
+                      }
+                    }
+
+                    return (
+                      <button
+                        key={o}
+                        disabled={isAnswered}
+                        onClick={() => answer(i, j)}
+                        className={`w-full text-left p-3.5 rounded-2xl border transition text-sm sm:text-base flex items-center justify-between ${btnStyle}`}
+                      >
+                        <span>{o}</span>
+                        {isAnswered && isRightOption && (
+                          <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0" />
+                        )}
+                        {isAnswered && isSelected && !isCorrect && (
+                          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+
+        {/* Baton Handed Off celebration card */}
         {n === 3 && r && (
-          <section className="card note">
-            <h3>You scored {r.s} out of 3. Baton passed.</h3>
-            <div className="strip" aria-hidden="true"><i className="baton" /></div>
-            <p>Saved on this device. {r.m.length ? `Practise next: ${r.m.map((j) => L.q[j][3]).join(", ")}.` : "Try the next lesson."}</p>
+          <section className="bg-white border-2 border-amber-400 rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 mb-2">
+                  <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                  Baton Passed
+                </div>
+                <h3 className="text-2xl font-bold font-sans text-slate-900">
+                  You scored {r.s} out of 3.
+                </h3>
+                <p className="text-slate-600 text-sm mt-1 max-w-lg">
+                  Saved on this device.{" "}
+                  {r.m.length
+                    ? `Practise next: ${r.m.map((j) => L.q[j][3]).join(", ")}.`
+                    : "Excellent work! Try the next lesson."}
+                </p>
+              </div>
+
+              <div className="shrink-0 flex sm:flex-col gap-2.5">
+                <button
+                  onClick={() => {
+                    setLes(null);
+                    window.scrollTo?.({ top: 0, behavior: "smooth" });
+                  }}
+                  className="px-6 py-2.5 rounded-2xl bg-[#0f3d2e] hover:bg-[#165541] text-white font-bold text-sm shadow transition flex items-center justify-center gap-2"
+                >
+                  Back to track
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setAns({})}
+                  className="px-4 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition border border-slate-300 flex items-center justify-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Try again
+                </button>
+              </div>
+            </div>
+
+            {/* Visual Baton strip */}
+            <div className="mt-6 pt-5 border-t border-slate-200">
+              <div className="flex justify-between text-xs text-slate-500 font-semibold mb-1.5">
+                <span>Start</span>
+                <span>Baton passed</span>
+                <span>Saved</span>
+              </div>
+              <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-400 to-emerald-600 rounded-full transition-all duration-700"
+                  style={{ width: `${(r.s / 3) * 100}%` }}
+                />
+              </div>
+            </div>
           </section>
         )}
-      </>
+      </div>
     );
   };
 
-  const Home = ({ l }: { l: Learner }) => {
+  /* ------------------- LEARNER HOME VIEW ------------------- */
+  const renderHome = (l: Learner) => {
     const next = LES.find((x) => !l.p[x.id])?.id;
-    const style = { "--p": `${(done(l) / LES.length) * 100}%` } as CSSProperties;
+    const progressPercent = Math.round((done(l) / LES.length) * 100);
+
     return (
-      <>
-        <section className="hello">
-          <div><h2>Hello, {l.f}</h2><p className="mut">Your code is <b>{l.id}</b>. It holds your lessons and scores, with no surname or address.</p></div>
-          <button className="ghost" onClick={() => pick(null)}>Switch learner</button>
+      <div className="space-y-8">
+        {/* Learner Welcome Banner - Light and Warm */}
+        <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h2 className="text-2xl sm:text-3xl font-bold font-sans text-slate-900">
+                Hello, {l.f}
+              </h2>
+              <p className="text-slate-600 text-sm">
+                Your code is <b className="font-mono text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-300">{l.id}</b>. It holds your lessons and scores, with no surname or address.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => copyToClipboard(l.id)}
+                className="px-3.5 py-2 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition flex items-center gap-1.5"
+              >
+                {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-700" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedId ? "Code copied" : "Copy code"}
+              </button>
+              <button
+                onClick={() => pick(null)}
+                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold border border-slate-300 transition flex items-center gap-1.5"
+              >
+                <Users className="w-3.5 h-3.5" />
+                Switch learner
+              </button>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-6 pt-5 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-slate-700">Progress:</span>
+              <span className="text-xs text-slate-600">
+                {done(l)} of {LES.length} lessons completed ({progressPercent}%)
+              </span>
+            </div>
+            <div className="flex-1 max-w-sm bg-slate-200 h-2 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-emerald-600 rounded-full transition-all duration-500"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
         </section>
-        {l.pk && <section className="card note"><h3>Your teacher sent you a catch-up plan</h3><Plan l={l} /></section>}
-        <h2>Your track</h2>
-        <ol className="track" style={style}>{LES.map((x) => {
-          const r = l.p[x.id];
-          return (
-            <li key={x.id} className={r ? (r.s === 3 ? "done" : "part") : x.id === next ? "next" : ""}>
-              <span className="st" aria-hidden="true" />
-              <div className="stc">
-                <h3>{x.t}</h3>
-                <span className="mut">{r ? `Score ${r.s} out of 3` : x.id === next ? "Next up, 8 minutes" : "Not started, 8 minutes"}</span>
-                <button className={x.id === next ? "pri" : ""} onClick={() => { setLes(x.id); setAns({}); }}>{r ? "Review" : "Start"}</button>
+
+        {/* Catch-up Notification if Teacher sent one */}
+        {l.pk && (
+          <section className="bg-amber-50 border-l-4 border-amber-400 border-y border-r border-slate-200 rounded-3xl p-6 shadow-sm">
+            <div className="flex items-start gap-3.5">
+              <div className="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 font-bold flex items-center justify-center shrink-0">
+                <Calendar className="w-5 h-5" />
               </div>
-            </li>
-          );
-        })}</ol>
-        <section className="card">
-          <h3>Missed some school?</h3>
-          <p className="mut">Get a short plan to catch up, one small step a day. Every lesson also works as audio.</p>
-          <button onClick={() => setPlan(!plan)}>{plan ? "Hide plan" : "Show my catch-up plan"}</button>
-          {plan && <Plan l={l} />}
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-slate-900">
+                  Your teacher sent you a catch-up plan
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+                  Small, bite-sized daily steps to catch up.
+                </p>
+                {renderPlan(l)}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* The Track: Modular Lessons */}
+        <section className="space-y-4">
+          <h3 className="text-xl sm:text-2xl font-bold font-sans text-slate-900">
+            Your track
+          </h3>
+
+          <div className="grid gap-3.5">
+            {LES.map((x, idx) => {
+              const r = l.p[x.id];
+              const isNext = x.id === next;
+              const isMastered = r?.s === 3;
+              const isPart = r && r.s < 3;
+
+              return (
+                <div
+                  key={x.id}
+                  className={`p-5 rounded-3xl border transition duration-150 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${isNext
+                    ? "bg-white border-2 border-amber-400 shadow-sm"
+                    : "bg-white border-slate-200 shadow-sm"
+                    }`}
+                >
+                  <div className="flex items-start sm:items-center gap-4">
+                    <div
+                      className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 ${isMastered
+                        ? "bg-emerald-600 text-white"
+                        : isPart
+                          ? "bg-amber-100 text-amber-800 border border-amber-300"
+                          : isNext
+                            ? "bg-amber-400 text-slate-900"
+                            : "bg-slate-100 text-slate-500 border border-slate-200"
+                        }`}
+                    >
+                      {isMastered ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
+                    </div>
+
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                          {x.category}
+                        </span>
+                        {isNext && (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-400 text-slate-950">
+                            Next up
+                          </span>
+                        )}
+                      </div>
+
+                      <h4 className="text-base sm:text-lg font-bold text-slate-900 mt-1">
+                        {x.t}
+                      </h4>
+
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {r
+                          ? `Score ${r.s} out of 3`
+                          : isNext
+                            ? "Next up, 8 minutes"
+                            : "Not started, 8 minutes"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 sm:self-center">
+                    <button
+                      onClick={() => {
+                        setLes(x.id);
+                        setAns({});
+                        window.scrollTo?.({ top: 0, behavior: "smooth" });
+                      }}
+                      className={`w-full sm:w-auto px-5 py-2.5 rounded-2xl font-semibold text-sm transition shadow-sm flex items-center justify-center gap-2 ${isNext
+                        ? "bg-[#0f3d2e] hover:bg-[#165541] text-white"
+                        : r
+                          ? "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300"
+                          : "bg-slate-100 hover:bg-emerald-800 hover:text-white text-slate-700 border border-slate-200"
+                        }`}
+                    >
+                      {r ? "Review" : "Start"}
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </section>
-        <section className="card">
-          <h3>Moving schools or leaving home?</h3>
-          <p className="mut">Make a transfer code. It carries only your learning record, so you can continue anywhere without a national records system.</p>
-          <label className="chk"><input type="checkbox" checked={inc} onChange={(e) => setInc(e.target.checked)} /> Include my first name</label>
-          <button onClick={makeCode}>Make my transfer code</button>
-          {code && <><textarea readOnly value={code} aria-label="Transfer code" onFocus={(e) => e.currentTarget.select()} /><p className="mut">Give this to your new teacher or Steward. Keep it private.</p></>}
-        </section>
-      </>
+
+        {/* Catch-up & Transfer Tools */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Catch-up Plan Card */}
+          <section className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <h4 className="text-lg font-bold font-sans text-slate-900">Missed some school?</h4>
+            <p className="text-xs sm:text-sm text-slate-600 mt-1">
+              Get a short plan to catch up, one small step a day. Every lesson also works as audio.
+            </p>
+
+            <button
+              onClick={() => setPlan(!plan)}
+              className="mt-4 px-4 py-2 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-xs sm:text-sm font-semibold text-slate-800 transition"
+            >
+              {plan ? "Hide plan" : "Show my catch-up plan"}
+            </button>
+
+            {plan && renderPlan(l)}
+          </section>
+
+          {/* Transfer Passport */}
+          <section className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <h4 className="text-lg font-bold font-sans text-slate-900">
+              Moving schools or leaving home?
+            </h4>
+            <p className="text-xs sm:text-sm text-slate-600 mt-1">
+              Make a transfer code. It carries only your learning record, so you can continue anywhere without a national records system.
+            </p>
+
+            <div className="mt-3 space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={inc}
+                  onChange={(e) => setInc(e.target.checked)}
+                  className="rounded text-emerald-700"
+                />
+                Include my first name
+              </label>
+
+              <button
+                onClick={makeCode}
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-sm"
+              >
+                <Share2 className="w-4 h-4" />
+                Make my transfer code
+              </button>
+            </div>
+
+            {code && (
+              <div className="mt-4 p-3 bg-slate-50 rounded-2xl border border-slate-300 space-y-2">
+                <div className="flex items-center justify-between text-xs text-slate-600">
+                  <span className="font-semibold text-slate-900">Your Transfer Code:</span>
+                  <button
+                    onClick={() => copyToClipboard(code, true)}
+                    className="flex items-center gap-1 font-bold text-emerald-800 hover:underline"
+                  >
+                    {copiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedCode ? "Copied" : "Copy"}
+                  </button>
+                </div>
+                <textarea
+                  readOnly
+                  value={code}
+                  rows={2}
+                  className="w-full text-xs font-mono bg-white p-2 rounded-xl border border-slate-300 text-slate-800 focus:outline-none"
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <p className="text-[11px] text-slate-500">
+                  Give this to your new teacher or Steward. Keep it private.
+                </p>
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
     );
   };
 
-  /* ---------- educator ---------- */
-  const Edu = () => {
-    const L = lesson(el), d = S.ls.filter((l) => l.p[L.id]);
-    const u = d.filter((l) => l.p[L.id].s === 3).length, a = d.filter((l) => l.p[L.id].s === 2).length, r = d.length - u - a, N = d.length || 1;
+  /* ------------------- EDUCATOR DASHBOARD VIEW ------------------- */
+  const renderEdu = () => {
+    const L = lesson(el);
+    const d = S.ls.filter((l) => l.p[L.id]);
+    const u = d.filter((l) => l.p[L.id].s === 3).length;
+    const a = d.filter((l) => l.p[L.id].s === 2).length;
+    const r = d.length - u - a;
+    const N = d.length || 1;
     const aw = S.ls.filter((l) => days(l) >= 7);
+
+    // Filter learners
+    const filteredLearners = S.ls.filter((l) => {
+      const matchesSearch =
+        l.f.toLowerCase().includes(eduSearch.toLowerCase()) ||
+        l.id.toLowerCase().includes(eduSearch.toLowerCase());
+      const matchesClass = eduClassFilter === "all" || l.c === eduClassFilter;
+      const matchesStatus =
+        eduFilter === "all"
+          ? true
+          : eduFilter === "attention"
+            ? days(l) >= 7 || Object.values(l.p).some((p) => p.s < 2)
+            : days(l) < 7;
+      return matchesSearch && matchesClass && matchesStatus;
+    });
+
     return (
-      <>
-        <section className="card">
-          <h2>Class overview</h2>
-          <p className="mut">First names and learner codes only. In a pilot, access is limited to the teacher and Steward.</p>
-          <div className="stats"><div><b>{S.ls.length}</b>learners</div><div><b>{S.ls.length - aw.length}</b>active this week</div><div><b className={aw.length ? "alert" : ""}>{aw.length}</b>away 7+ days</div></div>
-        </section>
-        <section className="card">
-          <h2>Learning gap detector</h2>
-          <select value={el} onChange={(e) => setEl(e.target.value)} aria-label="Lesson">{LES.map((x) => <option key={x.id} value={x.id}>{x.t}</option>)}</select>
-          <div className="bar" role="img" aria-label={`${u} understood, ${a} need support, ${r} need foundation revision`}>
-            <span style={{ width: `${(u / N) * 100}%`, background: "var(--g)" }} /><span style={{ width: `${(a / N) * 100}%`, background: "var(--a)" }} /><span style={{ width: `${(r / N) * 100}%`, background: "var(--r)" }} />
+      <div className="space-y-8">
+        {/* Class Overview Cards */}
+        <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+          <h2 className="text-2xl font-bold font-sans text-slate-900">Class overview</h2>
+          <p className="text-slate-600 text-sm mt-0.5">
+            First names and learner codes only. In a pilot, access is limited to the teacher and Steward.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <b className="block text-3xl font-bold font-sans text-slate-900">{S.ls.length}</b>
+              <span className="text-xs text-slate-600 font-medium">learners</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <b className="block text-3xl font-bold font-sans text-emerald-800">
+                {S.ls.length - aw.length}
+              </b>
+              <span className="text-xs text-slate-600 font-medium">active this week</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <b className={`block text-3xl font-bold font-sans ${aw.length ? "text-rose-600" : "text-slate-900"}`}>
+                {aw.length}
+              </b>
+              <span className="text-xs text-slate-600 font-medium">away 7+ days</span>
+            </div>
           </div>
-          <div className="lg"><span><i style={{ background: "var(--g)" }} />{u} understood the topic</span><span><i style={{ background: "var(--a)" }} />{a} need additional support</span><span><i style={{ background: "var(--r)" }} />{r} need a revision on the foundation</span></div>
-          <p className="mut">{S.ls.length - d.length} not started. Understood is 3 of 3, support is 2 of 3, foundation is 0 or 1.</p>
-          <h3>Questions most often missed</h3>
-          {L.q.map((q, j) => {
-            const pc = Math.round((d.filter((l) => l.p[L.id].m.includes(j)).length / N) * 100);
-            return <div className="miss" key={j}><div><span>{q[3]}</span><b>{pc}%</b></div><div className="m"><i style={{ width: `${pc}%` }} /></div></div>;
-          })}
         </section>
-        <section className="card">
-          <h2>Learner lanes</h2>
-          <p className="mut">Each lane is one learner. Each stop is a lesson, coloured by understanding.</p>
-          <div className="lanes">
-            <div className="lh"><span /><span className="lhr">{LES.map((x) => <span key={x.id}>{x.t.split(":")[0]}</span>)}</span><span /><span /></div>
-            {S.ls.map((l) => (
-              <div className="lane" key={l.id}>
-                <div className="who"><b>{l.f}</b><small>{l.id}{l.x ? " (sample)" : ""}</small></div>
-                <div className="rail">{LES.map((x) => <i key={x.id} className={"pt " + bucket(l.p[x.id])} title={`${x.t}: ${l.p[x.id] ? l.p[x.id].s + " of 3" : "not started"}`} />)}</div>
-                <div className={"aw" + (days(l) >= 7 ? " alert" : "")}>{days(l) >= 7 ? `away ${Math.floor(days(l))} days` : ago(l)}</div>
-                <div className="act">
-                  {days(l) >= 7 && (l.pk ? <small>Plan sent</small> : <button className="ghost" onClick={() => { upd((s) => { s.ls.find((z) => z.id === l.id)!.pk = true; }); setMsg(`Catch-up plan sent to ${l.f}.`); }}>Send plan</button>)}
-                  {cf === l.id
-                    ? <button className="ghost" onClick={() => { upd((s) => { s.ls = s.ls.filter((z) => z.id !== l.id); if (s.cur === l.id) s.cur = null; }); setCf(null); setMsg("Record erased."); }}>Confirm erase</button>
-                    : <button className="ghost" onClick={() => setCf(l.id)}>Erase</button>}
-                </div>
+
+        {/* Learning Gap Detector */}
+        <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold font-sans text-slate-900">
+                Learning gap detector
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600">
+                See topic comprehension and questions most often missed.
+              </p>
+            </div>
+
+            <div className="min-w-[200px]">
+              <select
+                value={el}
+                onChange={(e) => setEl(e.target.value)}
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 text-sm font-medium focus:ring-2 focus:ring-emerald-700"
+              >
+                {LES.map((x) => (
+                  <option key={x.id} value={x.id}>
+                    {x.t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Mastery Bar */}
+          <div>
+            <div className="flex h-7 rounded-xl overflow-hidden bg-slate-200 p-0.5 border border-slate-300">
+              <span
+                style={{ width: `${(u / N) * 100}%` }}
+                className="bg-emerald-600 h-full"
+                title={`${u} Understood`}
+              />
+              <span
+                style={{ width: `${(a / N) * 100}%` }}
+                className="bg-amber-400 h-full"
+                title={`${a} Need Support`}
+              />
+              <span
+                style={{ width: `${(r / N) * 100}%` }}
+                className="bg-rose-500 h-full"
+                title={`${r} Need Revision`}
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-700 mt-3">
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-emerald-600" />
+                <b>{u}</b> understood the topic
               </div>
-            ))}
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-amber-400" />
+                <b>{a}</b> need additional support
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-rose-500" />
+                <b>{r}</b> need a revision on the foundation
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-500 mt-2">
+              {S.ls.length - d.length} not started. Understood is 3 of 3, support is 2 of 3, foundation is 0 or 1.
+            </p>
           </div>
-          <div className="lg"><span><i style={{ background: "var(--g)" }} />Understood</span><span><i style={{ background: "var(--a)" }} />Needs support</span><span><i style={{ background: "var(--r)" }} />Needs revision</span><span><i className="hol" />Not started</span></div>
+
+          {/* Questions most often missed */}
+          <div className="pt-4 border-t border-slate-200">
+            <h3 className="text-base font-bold text-slate-900 mb-3">
+              Questions most often missed
+            </h3>
+
+            <div className="grid gap-3">
+              {L.q.map((q, j) => {
+                const pc = Math.round((d.filter((l) => l.p[L.id]?.m.includes(j)).length / N) * 100);
+                return (
+                  <div
+                    key={j}
+                    className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col gap-2"
+                  >
+                    <div className="flex items-center justify-between text-xs sm:text-sm">
+                      <span className="font-semibold text-slate-800">
+                        {q[3]} <span className="text-slate-500 font-normal">({q[0]})</span>
+                      </span>
+                      <span className="font-bold text-slate-900">
+                        {pc}%
+                      </span>
+                    </div>
+
+                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-rose-500"
+                        style={{ width: `${pc}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </section>
-        <section className="card">
-          <h2>Protecting children’s information</h2>
-          <ul>
-            <li>Only a first name or nickname, class, learner code and lesson scores are kept.</li>
-            <li>No surname, address, phone number or photo.</li>
-            <li>A guardian must agree before a record is created.</li>
-            <li>Records move by transfer code, so continuity does not depend on a national database.</li>
-            <li>Any record can be erased here.</li>
+
+        {/* Learner Lanes Matrix */}
+        <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold font-sans text-slate-900">
+                Learner lanes
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600">
+                Each lane is one learner. Each stop is a lesson, coloured by understanding.
+              </p>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={eduSearch}
+                  onChange={(e) => setEduSearch(e.target.value)}
+                  placeholder="Search name or ID..."
+                  className="pl-9 pr-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white text-slate-900"
+                />
+              </div>
+
+              <select
+                value={eduClassFilter}
+                onChange={(e) => setEduClassFilter(e.target.value)}
+                className="px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs bg-white text-slate-900"
+              >
+                <option value="all">All Classes</option>
+                {CLS.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+
+              <select
+                value={eduFilter}
+                onChange={(e) => setEduFilter(e.target.value as any)}
+                className="px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs bg-white text-slate-900"
+              >
+                <option value="all">All Status</option>
+                <option value="attention">Needs Attention</option>
+                <option value="active">Active</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[580px]">
+              <thead>
+                <tr className="border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="py-3 px-3">Learner</th>
+                  <th className="py-3 px-3">Class</th>
+                  <th className="py-3 px-3 text-center">English • Maths • Science</th>
+                  <th className="py-3 px-3">Last Active</th>
+                  <th className="py-3 px-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm">
+                {filteredLearners.map((l) => {
+                  const isAway = days(l) >= 7;
+                  return (
+                    <tr key={l.id} className="hover:bg-slate-50 transition">
+                      <td className="py-3 px-3">
+                        <div className="font-semibold text-slate-900 flex items-center gap-1.5">
+                          {l.f}
+                          {l.x && (
+                            <span className="text-[10px] font-normal px-1 rounded bg-slate-200 text-slate-600">
+                              sample
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-mono text-xs text-slate-400">{l.id}</div>
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                          {l.c}
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <div className="flex items-center justify-center gap-3">
+                          {LES.map((x) => {
+                            const b = bucket(l.p[x.id]);
+                            const color =
+                              b === "g"
+                                ? "bg-emerald-600 text-white"
+                                : b === "a"
+                                  ? "bg-amber-400 text-slate-950"
+                                  : b === "r"
+                                    ? "bg-rose-500 text-white"
+                                    : "bg-white border-2 border-slate-300 text-transparent";
+                            return (
+                              <div
+                                key={x.id}
+                                title={`${x.t}: ${l.p[x.id] ? l.p[x.id].s + " of 3" : "not started"}`}
+                                className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm ${color}`}
+                              >
+                                {l.p[x.id] ? l.p[x.id].s : ""}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-3">
+                        <span
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isAway ? "text-rose-600 font-bold" : "text-slate-600"
+                            }`}
+                        >
+                          {isAway ? `away ${Math.floor(days(l))} days` : ago(l)}
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {isAway && (
+                            l.pk ? (
+                              <span className="text-xs text-emerald-800 font-medium">
+                                Plan sent
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  upd((s) => {
+                                    s.ls.find((z) => z.id === l.id)!.pk = true;
+                                  });
+                                  setMsg(`Catch-up plan sent to ${l.f}.`);
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-300 transition"
+                              >
+                                Send plan
+                              </button>
+                            )
+                          )}
+
+                          {cf === l.id ? (
+                            <button
+                              onClick={() => {
+                                upd((s) => {
+                                  s.ls = s.ls.filter((z) => z.id !== l.id);
+                                  if (s.cur === l.id) s.cur = null;
+                                });
+                                setCf(null);
+                                setMsg("Record erased.");
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition"
+                            >
+                              Confirm erase
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setCf(l.id)}
+                              className="text-xs text-slate-500 hover:text-rose-600 hover:underline px-2 py-1"
+                            >
+                              Erase
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Legend */}
+          <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center gap-4 text-xs text-slate-600">
+            <span className="font-semibold text-slate-900">Key:</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-emerald-600" />
+              Understood
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-amber-400" />
+              Needs support
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-rose-500" />
+              Needs revision
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-white border border-slate-400" />
+              Not started
+            </div>
+          </div>
+        </section>
+
+        {/* Protecting Children's Information - Simple, Direct, Straightforward */}
+        <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="w-6 h-6 text-[#0f3d2e]" />
+            <h2 className="text-2xl font-bold font-sans text-slate-900">
+              Protecting children’s information
+            </h2>
+          </div>
+
+          <p className="text-slate-600 text-sm">
+            RelayLearn is built to keep children safe. We collect only what is needed for learning:
+          </p>
+
+          <ul className="space-y-2 text-sm text-slate-700 list-disc list-inside">
+            <li>
+              Only a first name or nickname, class, learner code, and lesson scores are kept.
+            </li>
+            <li>
+              No surname, home address, phone number, or photo is ever requested.
+            </li>
+            <li>
+              A parent or guardian must agree before any learner record is created.
+            </li>
+            <li>
+              Records move by transfer code, so school continuity never depends on a national database.
+            </li>
+            <li>
+              Any learner’s record can be erased right here with one click.
+            </li>
           </ul>
-          {S.ls.some((l) => l.x) && <button onClick={() => { upd((s) => { s.ls = s.ls.filter((l) => !l.x); if (!s.ls.some((l) => l.id === s.cur)) s.cur = null; }); setMsg("Sample learners removed."); }}>Remove sample learners</button>}
+
+          {S.ls.some((l) => l.x) && (
+            <div className="pt-2">
+              <button
+                onClick={() => {
+                  upd((s) => {
+                    s.ls = s.ls.filter((l) => !l.x);
+                    if (!s.ls.some((l) => l.id === s.cur)) s.cur = null;
+                  });
+                  setMsg("Sample learners removed.");
+                }}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-800 transition border border-slate-300"
+              >
+                Remove sample learners
+              </button>
+            </div>
+          )}
         </section>
-      </>
+      </div>
     );
   };
 
   return (
-    <div className="rl">
-      <style>{css}</style>
-      <div className="wrap">
-        <header>
-          <div className="logo"><i className="bt" aria-hidden="true" /><div>RelayLearn<small>Learning that follows the child, not the device.</small></div></div>
-          <nav aria-label="View">
-            <button aria-pressed={tab === "learn"} onClick={() => go("learn")}>Learner</button>
-            <button aria-pressed={tab === "edu"} onClick={() => go("edu")}>Educator</button>
+    <div className="min-h-screen bg-[#eef3ee] text-[#10201a] antialiased selection:bg-emerald-600 selection:text-white">
+      {/* Inline styles for original baton logo icon */}
+      <style>{`
+        .relay-baton-icon {
+          width: 12px;
+          height: 34px;
+          border-radius: 6px;
+          background: #f5b700;
+          transform: rotate(24deg);
+          box-shadow: -9px 5px 0 -2px #0f3d2e;
+          display: inline-block;
+          margin-right: 12px;
+          margin-left: 6px;
+          flex-shrink: 0;
+        }
+      `}</style>
+
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+        {/* Header with Original Logo */}
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#d3ddd5]">
+          <div className="flex items-center">
+            <i className="relay-baton-icon" aria-hidden="true" />
+            <div>
+              <div className="text-2xl sm:text-[1.7rem] font-bold font-sans text-[#10201a] leading-none">
+                RelayLearn
+              </div>
+              <small className="block text-xs sm:text-[0.82rem] text-[#51635a] mt-1 font-sans">
+                Learning that follows the child, not the device.
+              </small>
+            </div>
+          </div>
+
+          {/* Role View Toggle */}
+          <nav
+            aria-label="View"
+            className="flex p-1 bg-white border border-[#d3ddd5] rounded-full shadow-sm self-start sm:self-auto"
+          >
+            <button
+              onClick={() => go("learn")}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition ${tab === "learn"
+                ? "bg-[#0f3d2e] text-white"
+                : "text-[#51635a] hover:text-[#10201a]"
+                }`}
+            >
+              Learner
+              {me && (
+                <span className="text-[11px] font-normal opacity-90">
+                  ({me.f})
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => go("edu")}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition ${tab === "edu"
+                ? "bg-[#0f3d2e] text-white"
+                : "text-[#51635a] hover:text-[#10201a]"
+                }`}
+            >
+              Educator
+            </button>
           </nav>
         </header>
-        {msg && <p className="msg" role="status">{msg}</p>}
-        {tab === "edu" ? <Edu /> : !me ? <Who /> : les ? <Lesson l={me} /> : <Home l={me} />}
-        <footer className="mut">Demo data is stored in this browser only. In a pilot the app runs from a community learning node over local Wi-Fi. Scores marked sample are illustrative.</footer>
+
+        {/* Global Banner Notification */}
+        {msg && (
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#0f3d2e] text-white text-xs sm:text-sm shadow-sm">
+            <div className="flex items-center gap-2">
+              <Info className="w-4 h-4 shrink-0" />
+              <span>{msg}</span>
+            </div>
+            <button
+              onClick={() => setMsg("")}
+              className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded-lg transition"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {/* Main Content Sections */}
+        <main>
+          {tab === "edu"
+            ? renderEdu()
+            : !me
+              ? renderWho()
+              : les
+                ? renderLesson(me)
+                : renderHome(me)}
+        </main>
+
+        {/* Footer */}
+        <footer className="pt-6 pb-4 border-t border-[#d3ddd5] text-xs text-[#51635a] leading-relaxed">
+          Demo data is stored in this browser only. In a pilot the app runs from a community learning node over local Wi-Fi. Scores marked sample are illustrative.
+        </footer>
       </div>
     </div>
   );
 }
-
-const css = `
-.rl{--bg:#eef3ee;--fg:#10201a;--mut:#51635a;--card:#fff;--line:#d3ddd5;--pine:#0f3d2e;--pinefg:#fff;--gold:#f5b700;--g:#1fa65a;--a:#f2a900;--r:#e5484d;--lane:#2b59c3;
- background:var(--bg);color:var(--fg);min-height:100vh;font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;box-sizing:border-box}
-@media(prefers-color-scheme:dark){.rl{--bg:#0b1713;--fg:#e8f0ea;--mut:#9db0a5;--card:#12251d;--line:#25402f;--pine:#4fd1a0;--pinefg:#06241a;--lane:#7aa2ff}}
-.rl *{box-sizing:border-box}.wrap{max-width:780px;margin:0 auto;padding:16px 16px 48px}
-.rl h2{font:700 1.4rem/1.2 Georgia,"Times New Roman",serif;letter-spacing:-.01em;margin:0 0 8px}.rl h3{font-size:1.05rem;margin:0 0 4px}.rl p{margin:0 0 10px}
-.mut{color:var(--mut);font-size:.92rem}.alert{color:var(--r);font-weight:700}
-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 0 18px}
-.logo{display:flex;align-items:center;gap:10px;font:700 1.6rem Georgia,serif}.logo small{display:block;font:400 .8rem system-ui;color:var(--mut)}
-.bt{width:12px;height:34px;border-radius:6px;background:var(--gold);transform:rotate(24deg);box-shadow:-9px 5px 0 -2px var(--pine)}
-nav{display:flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px}
-.rl button,.rl input,.rl select,.rl textarea{font:inherit;color:inherit}
-.rl button{cursor:pointer;min-height:44px;padding:8px 18px;border-radius:999px;border:1.5px solid var(--line);background:var(--card)}
-.rl button:focus-visible,.rl input:focus-visible,.rl select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-nav button{border:0;background:none}nav button[aria-pressed=true]{background:var(--pine);color:var(--pinefg);font-weight:700}
-.pri{background:var(--pine)!important;color:var(--pinefg);border-color:var(--pine)!important;font-weight:700}.ghost{background:none!important;min-height:40px;padding:6px 14px}
-.rl input,.rl select,.rl textarea{display:block;width:100%;min-height:44px;margin:0 0 10px;padding:8px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg)}
-.rl input[type=checkbox]{display:inline-block;width:auto;min-height:0;margin:0 6px 0 0}.rl textarea{margin-top:10px;min-height:90px;font:13px ui-monospace,Menlo,monospace}
-.chk{display:block;margin:0 0 12px;font-size:.95rem}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0}.card.note{border-left:6px solid var(--gold)}
-.hello{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin:6px 0 4px}
-.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{display:flex;flex-direction:column;align-items:flex-start;line-height:1.25;border-radius:14px!important}.chip small{font-size:.72rem;color:var(--mut)}
-.msg{background:var(--pine);color:var(--pinefg);padding:10px 16px;border-radius:14px}
-.track{list-style:none;margin:14px 0 0;padding:0 0 0 46px;position:relative}
-.track::before{content:"";position:absolute;left:15px;top:14px;bottom:14px;width:6px;border-radius:3px;background:linear-gradient(to bottom,var(--g) var(--p),var(--line) var(--p))}
-.track li{position:relative;padding:0 0 18px}.track .st{position:absolute;left:-46px;top:2px;width:36px;height:36px;border-radius:50%;background:var(--card);border:4px solid var(--line);display:grid;place-items:center;font-weight:700}
-.track .done .st{background:var(--g);border-color:var(--g);color:#fff}.track .done .st::after{content:"✓"}
-.track .part .st{border-color:var(--a)}.track .part .st::after{content:"!";color:var(--a)}
-.track .next .st{background:var(--gold);border-color:var(--gold);animation:pulse 2.2s ease-in-out infinite}.track .next .st::after{content:"";width:10px;height:22px;border-radius:5px;background:var(--pine);transform:rotate(24deg)}
-@keyframes pulse{50%{box-shadow:0 0 0 10px #f5b70033}}
-.stc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
-.track .next .stc{border-color:var(--gold);border-width:2px}
-.plan{list-style:none;padding:0;margin:10px 0 0}.plan li{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}.plan span{flex:1}.plan small{display:block;color:var(--mut)}
-.opts{display:grid;gap:8px}.opts button{text-align:left;border-radius:14px}.opts .right{border-color:var(--g);color:var(--g);font-weight:700}.opts .wrong{border-color:var(--r);color:var(--r)}
-.strip{position:relative;height:8px;border-radius:99px;background:var(--line);margin:12px 0}
-.baton{position:absolute;top:-8px;left:0;width:12px;height:24px;border-radius:6px;background:var(--gold);transform:rotate(24deg);animation:run 1.1s cubic-bezier(.3,.8,.3,1) forwards}
-@keyframes run{to{left:calc(100% - 12px)}}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stats b{display:block;font:700 2rem Georgia,serif}
-.bar{display:flex;height:28px;border-radius:10px;overflow:hidden;background:var(--line);margin:10px 0}.bar span{display:block}
-.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:.88rem;margin:8px 0}.lg i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px}.hol{border:2px solid var(--line)}
-.miss{margin:10px 0}.miss>div:first-child{display:flex;justify-content:space-between}.miss .m{height:8px;border-radius:99px;background:var(--line)}.miss .m i{display:block;height:100%;border-radius:99px;background:var(--r)}
-.lanes{margin:12px 0;overflow-x:auto}.lh,.lane{display:grid;grid-template-columns:minmax(110px,1.2fr) minmax(170px,1.4fr) minmax(90px,.8fr) minmax(130px,auto);gap:10px;align-items:center;min-width:560px}
-.lh{font-size:.75rem;color:var(--mut)}
-.lane{padding:8px 0;border-top:1px solid var(--line)}.who small{display:block;font-size:.72rem;color:var(--mut)}.act{display:flex;gap:4px;align-items:center;justify-content:flex-end}.act small{color:var(--mut)}
-.rail{position:relative;display:flex;justify-content:space-between;padding:0 14px}.rail::before{content:"";position:absolute;left:0;right:0;top:50%;height:8px;margin-top:-4px;border-radius:4px;background:repeating-linear-gradient(to right,var(--lane) 0 10px,transparent 10px 16px);opacity:.35}
-.pt{position:relative;width:22px;height:22px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 2px var(--line)}.pt.g{background:var(--g)}.pt.a{background:var(--a)}.pt.r{background:var(--r)}.pt.n{background:var(--card)}
-.lhr{display:flex;justify-content:space-between}
-footer{margin-top:28px}
-@media(max-width:560px){.stats b{font-size:1.5rem}}
-@media(prefers-reduced-motion:reduce){.rl *{animation:none!important;transition:none!important}.baton{left:calc(100% - 12px)}}
-`;
